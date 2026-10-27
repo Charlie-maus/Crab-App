@@ -1,0 +1,1104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Crab App">
+<meta name="theme-color" content="#121e26">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>Crab App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Crab App v1. Same look and plumbing as Catch Logger: dark deck mode by default,
+   colour by meaning (green = go/ok, amber = caution, red = dead/danger), big tap targets. */
+:root{
+  --bg:#e8edf0; --surface:#f8fafb; --raised:#ffffff; --ink:#0f1f29; --muted:#556670; --line:#c9d4da;
+  --accent:#0a6a85; --on-accent:#ffffff; --accent-soft:#d5e8ee;
+  --go:#1c7c45; --on-go:#ffffff; --go-s:#dcf0e3;
+  --warn:#9c5300; --warn-soft:#fbe9d1; --danger:#b3261e; --danger-soft:#f8dedb; --on-danger:#ffffff;
+  --male:#2f5fb5; --fem:#b8501c; --neu:#4f5d66; --on-fam:#ffffff;
+  --egg1:#f5d90a; --egg1-ink:#2a2400; --egg2:#c98a1e; --egg2-ink:#1f1300; --egg3:#5a3410; --egg3-ink:#ffffff;
+  --def:#c9a800; --def-ink:#231d00; --clear:#e8702a; --clear-ink:#1f0d00;
+  --f-display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  --r:12px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0b1216; --surface:#121e26; --raised:#1a2830; --ink:#e6edf1; --muted:#97a8b2; --line:#2a434e;
+  --accent:#4cb2d0; --on-accent:#05202a; --accent-soft:#15384a;
+  --go:#3ab36a; --on-go:#04200e; --go-s:#123220;
+  --warn:#f0a446; --warn-soft:#3a2810; --danger:#f0776d; --danger-soft:#3b1a17; --on-danger:#1c0705;
+  --male:#6f9cf0; --fem:#ef9563; --neu:#9aa9b2; --on-fam:#0b1216;
+  --def:#f5d90a; --def-ink:#2a2400;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0b1216; --surface:#121e26; --raised:#1a2830; --ink:#e6edf1; --muted:#97a8b2; --line:#2a434e;
+  --accent:#4cb2d0; --on-accent:#05202a; --accent-soft:#15384a;
+  --go:#3ab36a; --on-go:#04200e; --go-s:#123220;
+  --warn:#f0a446; --warn-soft:#3a2810; --danger:#f0776d; --danger-soft:#3b1a17; --on-danger:#1c0705;
+  --male:#6f9cf0; --fem:#ef9563; --neu:#9aa9b2; --on-fam:#0b1216;
+  --def:#f5d90a; --def-ink:#2a2400;
+  color-scheme:dark}
+
+[hidden]{display:none!important}
+html,body{height:100%;margin:0}
+:root{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.35;-webkit-tap-highlight-color:transparent}
+body.noscroll{overflow:hidden}
+*,*::before,*::after{box-sizing:border-box}
+button,input,select,textarea{font:inherit;color:inherit}
+.app{height:100%;display:grid;grid-template-rows:auto 1fr;min-height:0}
+main{overflow:auto;padding-inline:16px;padding-block:0 calc(16px + env(safe-area-inset-bottom,0px));min-height:0}
+
+/* top bar */
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;padding:10px 16px;padding-top:calc(10px + env(safe-area-inset-top,0px));background:var(--surface);border-bottom:1px solid var(--line)}
+.brand{order:0;font-family:var(--f-display);font-weight:700;font-size:21px;letter-spacing:.03em;text-transform:uppercase;color:var(--accent)}
+.stn{order:2;display:flex;flex-direction:column;min-width:0;flex:1 1 220px}
+.stn b{font-family:var(--f-display);font-size:18px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stn span{font-size:12.5px;color:var(--muted)}
+.pills{order:3;display:flex;gap:6px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
+.pill{font-size:11.5px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;padding:4px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.pill.ok{border-color:var(--go);color:var(--go)}
+.pill.bad{background:var(--danger-soft);border-color:var(--danger);color:var(--danger)}
+.uibtn{font-size:11.5px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;padding:4px 9px;min-height:34px;border-radius:999px;border:1px solid var(--line);background:var(--raised);color:var(--ink);cursor:pointer;white-space:nowrap}
+.bk.ok{border-color:var(--go);color:var(--go)}.bk.amb{border-color:var(--warn);color:var(--warn);background:var(--warn-soft)}.bk.red{border-color:var(--danger);color:var(--danger);background:var(--danger-soft)}
+.uibtn.upd{background:var(--go);border-color:var(--go);color:var(--on-go);min-height:40px;font-size:13px}
+.nav{order:1;display:flex;gap:6px;margin-left:auto;flex-wrap:wrap}
+.nav button{min-height:44px;padding:0 12px;border-radius:8px;border:1px solid var(--line);background:var(--raised);font-weight:600;cursor:pointer}
+.nav button[aria-current="page"]{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+
+/* generic */
+.lbl{font-family:var(--f-display);font-weight:600;font-size:13.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.muted{color:var(--muted)} .small{font-size:13px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.btn{min-height:52px;border:1px solid var(--line);background:var(--raised);border-radius:var(--r);font-weight:600;font-size:16px;cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none;padding:4px 8px}
+.btn:active{transform:translateY(1px)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn:focus-visible,.nav button:focus-visible,.uibtn:focus-visible,.chip:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.btn.go,.btn.primary{background:var(--go);border-color:var(--go);color:var(--on-go)}
+.btn.danger{border-color:var(--danger);color:var(--danger)}
+.btn.danger.solid{background:var(--danger);color:var(--on-danger)}
+.btn.armed{background:var(--danger);border-color:var(--danger);color:var(--on-danger)}
+.seg{display:grid;gap:8px}
+.seg.c2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.seg.c3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.seg.c4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.seg.c5{grid-template-columns:repeat(5,minmax(0,1fr))}
+.seg .btn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.warn{background:var(--warn-soft);color:var(--warn);border:1px solid var(--warn);border-radius:10px;padding:10px 12px;font-weight:600;font-size:15px}
+.note{font-size:14px;color:var(--muted);max-width:75ch;margin:0}
+.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.actions .btn{padding:0 18px}
+.savefail{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-block:10px 0;padding:10px 14px;border-radius:10px;background:var(--danger);color:var(--on-danger);font-size:14.5px}
+.savefail .btn{min-height:44px;background:var(--raised);color:var(--ink);border-color:var(--raised);white-space:nowrap}
+
+/* ---------- data entry ---------- */
+.entry{display:flex;flex-direction:column;gap:14px;padding-block:16px 8px;max-width:1000px;margin-inline:auto}
+.colA,.colB{display:flex;flex-direction:column;gap:14px;min-width:0}
+@media (orientation:landscape) and (min-width:1000px){
+  .entry{display:grid;grid-template-columns:minmax(0,1.75fr) minmax(330px,1fr);align-items:start;max-width:none;gap:16px}
+  .enterrow{grid-template-columns:96px minmax(0,1fr) 170px}
+  .work{grid-template-columns:300px minmax(0,1fr)}
+  .colB .rowml{grid-template-columns:1fr}
+  .colB .tools{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .colB .chips{max-height:220px}
+}
+.navrow{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.stepper{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:8px;min-width:0}
+.arrow{width:64px;min-width:64px;min-height:64px;background:var(--go);border-color:var(--go);color:var(--on-go);display:flex;align-items:center;justify-content:center;padding:0}
+.stepval{flex:1;text-align:center;min-width:0}
+.stepval b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-family:var(--f-display);font-size:27px;font-weight:700;line-height:1.05}
+.enterrow{display:grid;grid-template-columns:100px minmax(0,1fr) 210px;gap:10px;min-height:104px}
+.emptybtn{font-size:19px;line-height:1.15;background:var(--accent-soft);border-color:var(--accent)}
+.emptybtn[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
+.disp{display:flex;align-items:center;gap:12px;background:var(--raised);border:1px solid var(--line);border-radius:14px;padding:8px 12px;min-width:0}
+.disp.has{border-color:var(--go);box-shadow:inset 0 0 0 2px var(--go)}
+.disp .len{display:flex;align-items:baseline;gap:6px}
+.disp .len span{font-family:var(--f-mono);font-weight:700;font-size:56px;line-height:1;font-variant-numeric:tabular-nums}
+.disp .len small{color:var(--muted);font-weight:600;font-size:17px}
+.disp .code{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.disp .code b{font-family:var(--f-mono);font-size:22px;color:var(--go);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.disp .code span{font-size:14px;color:var(--muted);line-height:1.25}
+.btn.clear{background:var(--clear);border-color:var(--clear);color:var(--clear-ink);font-weight:700;font-size:18px;padding:0 16px}
+.enter{font-family:var(--f-display);font-size:40px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:var(--go);border-color:var(--go);color:var(--on-go)}
+.enter.confirm{background:var(--warn);border-color:var(--warn);color:var(--on-fam);font-size:24px;line-height:1.1}
+.enter.edit{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-size:26px;line-height:1.1}
+.work{display:grid;grid-template-columns:330px minmax(0,1fr);gap:14px}
+.entry.lefty .padcol{order:2}
+.padcol{display:flex;flex-direction:column;gap:8px}
+.keypad{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.keypad .btn{min-height:66px;font-family:var(--f-mono);font-size:30px;font-weight:700}
+.unk{min-height:50px;color:var(--muted)}
+.unk[aria-pressed="true"]{background:var(--warn);border-color:var(--warn);color:var(--on-fam)}
+.selcol{display:flex;flex-direction:column;gap:7px;min-width:0}
+.selcol .lbl{margin-top:4px}
+.selcol .seg .btn{min-height:54px;font-size:18.5px;font-weight:700;line-height:1.1}
+.sx{border-width:2px}
+.sx[data-sx="M"]{border-color:var(--male);color:var(--male)}
+.sx[data-sx="FM"],.sx[data-sx="FI"]{border-color:var(--fem);color:var(--fem)}
+.sx[data-sx="U"]{border-color:var(--neu);color:var(--neu)}
+.seg .sx[data-sx="M"][aria-pressed="true"]{background:var(--male);border-color:var(--male);color:var(--on-fam)}
+.seg .sx[data-sx="FM"][aria-pressed="true"],.seg .sx[data-sx="FI"][aria-pressed="true"]{background:var(--fem);border-color:var(--fem);color:var(--on-fam)}
+.seg .sx[data-sx="U"][aria-pressed="true"]{background:var(--neu);border-color:var(--neu);color:var(--on-fam)}
+.egg{border-width:3px;display:flex;align-items:center;justify-content:center;gap:8px}
+.egg i{width:18px;height:18px;border-radius:50%;display:inline-block;border:1px solid rgba(0,0,0,.35)}
+.egg[data-egg="1"]{border-color:var(--egg1)}.egg[data-egg="1"] i{background:var(--egg1)}
+.egg[data-egg="2"]{border-color:var(--egg2)}.egg[data-egg="2"] i{background:var(--egg2)}
+.egg[data-egg="3"]{border-color:var(--egg3)}.egg[data-egg="3"] i{background:var(--egg3)}
+:root[data-theme="dark"] .egg[data-egg="3"]{border-color:#9a6230}
+.seg .egg[data-egg="1"][aria-pressed="true"]{background:var(--egg1);color:var(--egg1-ink);border-color:var(--egg1)}
+.seg .egg[data-egg="2"][aria-pressed="true"]{background:var(--egg2);color:var(--egg2-ink);border-color:var(--egg2)}
+.seg .egg[data-egg="3"][aria-pressed="true"]{background:var(--egg3);color:var(--egg3-ink);border-color:var(--egg3)}
+.seg .mo[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.defrow{display:grid;grid-template-columns:minmax(0,1fr) 108px;gap:8px;margin-top:6px}
+.defbtn{border:2px solid var(--def);font-size:16.5px;font-weight:700;line-height:1.15}
+.defbtn[aria-pressed="true"]{background:var(--def);color:var(--def-ink)}
+.setdef{border:2px solid var(--def);font-size:15px;line-height:1.1}
+.rowml{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:12px}
+.mhead{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.mpill{padding:3px 10px;border-radius:999px;font-size:14px;font-weight:700;background:var(--go-s);color:var(--go);border:1px solid var(--go)}
+.mpill.dead{background:var(--danger);color:var(--on-danger);border-color:var(--danger)}
+.dead .btn{min-height:46px;font-size:15px;line-height:1.1;font-weight:700;background:var(--danger-soft);border-color:var(--danger);color:var(--danger);padding:2px 4px}
+.dead .btn[aria-pressed="true"]{background:var(--danger);color:var(--on-danger)}
+.miss{display:grid;grid-template-columns:auto 52px 44px 52px;gap:8px;align-items:center}
+.miss .nm{font-weight:700;font-size:17px}.miss .nm small{display:block;font-weight:500;font-size:12.5px;color:var(--muted)}
+.miss .btn{min-height:48px;font-size:24px;padding:0}
+.miss output{font-family:var(--f-mono);font-weight:700;font-size:26px;text-align:center}
+.miss output.on{color:var(--danger)}
+.tools{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.tool{min-height:60px;background:var(--accent-soft);border-color:var(--accent);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;line-height:1.15;padding:4px}
+.tool b{font-size:16.5px}.tool small{font-size:12px;font-weight:500;opacity:.85;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tool.on{background:var(--accent);color:var(--on-accent)}
+.tool.spare{background:transparent;border:2px dashed var(--line);color:var(--muted)}
+.running{padding:10px 12px;gap:8px}
+.runhead{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.runhead .sp{flex:1}
+.poschip{min-height:34px;padding:0 12px;border-radius:999px;font-size:13.5px;font-weight:600;border:1px solid var(--go);color:var(--go);background:var(--go-s);cursor:pointer}
+.poschip.missing{border-color:var(--warn);color:var(--warn);background:var(--warn-soft)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;max-height:86px;overflow:auto}
+.chip{min-height:38px;padding:0 10px;border-radius:8px;background:var(--raised);border:1px solid var(--line);font-family:var(--f-mono);font-size:15.5px;font-weight:700;cursor:pointer;white-space:nowrap}
+.chip.dead{color:var(--danger);border-color:var(--danger)}
+.chip.sel{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.editbar{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.editgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr);gap:10px}
+.flash{animation:flash .4s ease-out}
+@keyframes flash{from{background:var(--go);color:var(--on-go)}to{}}
+@media (max-width:760px){
+  .enterrow{grid-template-columns:84px minmax(0,1fr);}
+  .enterrow .enter{grid-column:1/-1;min-height:72px}
+  .work{grid-template-columns:1fr}
+  .rowml{grid-template-columns:1fr}
+  .tools{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .navrow{grid-template-columns:1fr}
+}
+
+/* ---------- other views ---------- */
+.page{padding-block:16px;display:flex;flex-direction:column;gap:14px;max-width:1100px;margin-inline:auto}
+.page h2{font-family:var(--f-display);font-weight:700;font-size:28px;margin:0}
+.form{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px 14px}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field label{font-size:14px;font-weight:600;color:var(--muted)}
+.field label span{font-weight:400}
+.field input,.field select,.field textarea,.tin{min-height:48px;border:1px solid var(--line);border-radius:8px;background:var(--raised);padding:6px 10px;width:100%;font-size:17px}
+.field textarea{min-height:80px}
+.field.wide{grid-column:1/-1}
+.field input.mono,.mono{font-family:var(--f-mono)}
+.segrid{display:grid;grid-template-columns:64px repeat(3,minmax(0,1fr)) 116px;gap:8px 10px;align-items:center}
+.wqgrid{display:grid;grid-template-columns:minmax(150px,220px) repeat(2,minmax(0,1fr));gap:8px 10px;align-items:center}
+.gh{font-size:14px;font-weight:600;color:var(--muted)}
+.rh{font-weight:700;font-size:16px}
+.savehdr{min-height:68px;width:100%;font-family:var(--f-display);font-size:26px;letter-spacing:.04em;text-transform:uppercase}
+.tblwrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:14px}
+th{font-family:var(--f-display);font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:12.5px;color:var(--muted);text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:8px;border-bottom:1px solid var(--line);white-space:nowrap}
+tbody tr.click{cursor:pointer}
+tbody tr.click:hover td{background:var(--accent-soft)}
+td.mono{font-family:var(--f-mono);font-size:13.5px}
+td.dead{color:var(--danger)}
+.stat{font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:999px;border:1px solid var(--go);color:var(--go)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tabs .btn{min-height:44px;padding:0 14px}
+.tabs .btn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+textarea.csv{width:100%;min-height:260px;font-family:var(--f-mono);font-size:12px;border:1px solid var(--line);border-radius:8px;background:var(--raised);padding:10px;white-space:pre;overflow:auto}
+.daycard{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center}
+.daycard h3{margin:0;font-family:var(--f-display);font-size:22px}
+.daycard.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.confirmbar{display:flex;gap:12px;align-items:center;justify-content:flex-end;flex-wrap:wrap;padding:8px 10px;border-radius:10px;background:var(--danger-soft)}
+.delq{font-weight:600;color:var(--danger);font-size:15px}
+.btn.cancel{border-color:var(--ink)}
+
+/* modal + full-screen sheet */
+.modal{position:fixed;inset:0;z-index:30;background:rgba(5,12,16,.62);display:flex;align-items:center;justify-content:center;padding:16px;padding-top:calc(16px + env(safe-area-inset-top,0px))}
+.mbox{background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:16px;padding:18px;max-width:600px;width:100%;max-height:92%;overflow:auto;display:flex;flex-direction:column;gap:12px}
+.mbox.wide{max-width:860px}
+.mbox h3{margin:0;font-family:var(--f-display);font-size:26px}
+.mbox .seg .btn{min-height:54px;font-size:17px}
+.big{font-size:24px!important}
+.sheet{position:fixed;inset:0;z-index:20;background:var(--bg);overflow:auto;padding:12px 16px;padding-top:calc(12px + env(safe-area-inset-top,0px));padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+.sheetin{max-width:1000px;margin-inline:auto;display:flex;flex-direction:column;gap:12px}
+.shead{display:flex;align-items:center;gap:12px}
+.shead h2{margin:0;font-family:var(--f-display);font-size:28px;text-transform:uppercase;letter-spacing:.03em}
+.shead .done{margin-left:auto;min-width:150px;font-size:22px}
+.bygrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.bysp{min-height:58px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15;gap:2px}
+.bysp .n{font-size:16.5px;font-weight:700}.bysp .s{font-size:12.5px;font-style:italic;font-weight:400;opacity:.85}
+.bysp[aria-pressed="true"]{background:var(--go);border-color:var(--go);color:var(--on-go)}
+.addsp{display:flex;align-items:center;justify-content:center;gap:12px;background:var(--accent-soft);border-color:var(--accent);min-height:58px;font-size:18px;font-weight:700}
+.addsp small{font-weight:500;font-size:14px;color:var(--muted)}
+.addsp[aria-pressed="true"]{background:var(--go);border-color:var(--go);color:var(--on-go)}
+.addsp[aria-pressed="true"] small{color:inherit}
+.byentry{display:grid;grid-template-columns:330px minmax(0,1fr);gap:14px}
+.bypad{display:flex;flex-direction:column;gap:8px}
+.bydisp{min-height:58px;border-radius:10px;background:var(--raised);border:1px solid var(--line);display:flex;align-items:baseline;justify-content:flex-end;gap:6px;padding:6px 12px}
+.bydisp span{font-family:var(--f-mono);font-weight:700;font-size:38px;line-height:1.1}
+.bydisp small{color:var(--muted);font-weight:600}
+.bykeys .btn{min-height:62px;font-size:28px}
+.byright{display:flex;flex-direction:column;gap:8px;min-width:0}
+.bysel{font-size:18px}
+.cntrow{display:flex;align-items:center;gap:10px;margin-top:4px}
+.cntrow .btn.step{width:58px;min-height:56px;font-size:28px;padding:0}
+.cntrow output{width:56px;text-align:center;font-family:var(--f-mono);font-size:32px;font-weight:700}
+.cntrow .enter{flex:1;min-height:60px;font-size:30px}
+.byrun{flex-direction:row;align-items:center;gap:10px;padding:8px 12px}
+.byline{flex:1;display:flex;gap:6px;overflow-x:auto;white-space:nowrap;min-width:0}
+.byline .chip{font-size:14.5px}
+.remgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.rem{min-height:52px;font-size:15.5px;font-weight:700;line-height:1.15;border-color:var(--warn);color:var(--warn);background:var(--warn-soft)}
+.rem[aria-pressed="true"]{background:var(--warn);color:var(--on-fam)}
+.form2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.splist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;max-height:50vh;overflow:auto}
+.splist .btn{min-height:54px;text-align:left;padding:4px 12px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;line-height:1.15}
+.splist .btn i{font-size:13px;opacity:.8}
+.envgrid{display:grid;grid-template-columns:minmax(150px,210px) repeat(2,minmax(0,1fr));gap:10px 12px;align-items:center}
+.envgrid input{min-height:56px;font-family:var(--f-mono);font-size:22px;text-align:right;border:1px solid var(--line);border-radius:10px;background:var(--raised);padding:0 12px;width:100%}
+@media (max-width:760px){.byentry{grid-template-columns:1fr}.bygrid,.remgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.segrid{grid-template-columns:52px repeat(3,minmax(0,1fr))}.segrid .btn{grid-column:2/-1}.form2{grid-template-columns:1fr}}
+
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-weight:600;opacity:0;transition:opacity .15s;pointer-events:none;z-index:40;max-width:calc(100% - 32px)}
+.toast.on{opacity:1}
+@media (prefers-reduced-motion:reduce){.flash{animation:none}.toast{transition:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">Crab App</div>
+    <div class="stn"><b id="stnTitle">—</b><span id="stnSub">—</span></div>
+    <div class="pills">
+      <span class="pill" id="gpsPill">GPS …</span><span class="pill" id="savePill">Saved</span>
+      <button class="uibtn bk" id="bkPill">Backup</button>
+      <button class="uibtn" id="themeBtn"></button><button class="uibtn" id="handBtn"></button>
+      <button class="uibtn upd" id="updBtn" hidden>Update downloaded · tap to restart</button>
+    </div>
+    <nav class="nav" id="nav" aria-label="Screens">
+      <button data-v="days">Days</button>
+      <button data-v="header">Header</button>
+      <button data-v="entry">Data entry</button>
+      <button data-v="list">Full list</button>
+      <button data-v="export">Export</button>
+      <button data-v="setup">Setup</button>
+    </nav>
+  </header>
+  <main id="main">
+    <div class="savefail" id="saveFail" role="alert" hidden><span><b>The last entry could not be saved on this iPad.</b> Keep entering; it retries on every crab. Make a backup now, then check free space in iPad Settings.</span><button class="btn" id="bkNow2">Back up now</button></div>
+
+    <section class="entry" id="v-entry" hidden>
+      <div class="colA">
+        <div class="navrow">
+          <div class="stepper">
+            <button class="btn arrow" id="siteDn" aria-label="Previous site"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
+            <div class="stepval"><span class="lbl" id="siteSub">Site</span><b id="siteName">—</b></div>
+            <button class="btn arrow" id="siteUp" aria-label="Next site"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
+          </div>
+          <div class="stepper">
+            <button class="btn arrow" id="potDn" aria-label="Previous pot"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+            <div class="stepval"><span class="lbl" id="potSub">Pot</span><b id="potName">Pot 1</b></div>
+            <button class="btn arrow" id="potUp" aria-label="Next pot"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg></button>
+          </div>
+        </div>
+        <div class="enterrow">
+          <button class="btn emptybtn" id="emptyBtn" aria-pressed="false">Empty<br>pot</button>
+          <div class="disp" id="disp">
+            <div class="len"><span id="lenVal">—</span><small>mm</small></div>
+            <div class="code"><b id="codeVal"></b><span id="codeTxt"></span></div>
+            <button class="btn clear" id="clearBtn">Clear</button>
+          </div>
+          <button class="btn enter" id="enterBtn">Enter</button>
+        </div>
+        <div class="warn" id="warnBox" role="status" hidden></div>
+        <div class="work">
+          <div class="padcol">
+            <div class="keypad" id="keypad"></div>
+            <button class="btn unk" id="unkBtn" aria-pressed="false">Unknown size</button>
+          </div>
+          <div class="selcol">
+            <span class="lbl">Sex and maturity</span>
+            <div class="seg c2" id="sexSeg">
+              <button class="btn sx" data-sx="M">Male</button><button class="btn sx" data-sx="FM">Female (mature)</button>
+              <button class="btn sx" data-sx="U">Unknown sex</button><button class="btn sx" data-sx="FI">Female (immature)</button>
+            </div>
+            <span class="lbl">Egg stage · sets female + mature</span>
+            <div class="seg c3" id="eggSeg">
+              <button class="btn egg" data-egg="1"><i></i>Stage 1</button><button class="btn egg" data-egg="2"><i></i>Stage 2</button><button class="btn egg" data-egg="3"><i></i>Stage 3</button>
+            </div>
+            <span class="lbl">Moult</span>
+            <div class="seg c2" id="moultSeg"><button class="btn mo" data-mo="H">Hard</button><button class="btn mo" data-mo="S">Soft</button></div>
+            <div class="defrow"><button class="btn defbtn" id="defBtn" aria-pressed="false">Default off</button><button class="btn setdef" id="setDefBtn">Set<br>default</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="colB">
+        <div class="rowml">
+          <div class="panel">
+            <div class="mhead"><span class="lbl">Mortality</span><span class="mpill" id="mortPill">Alive</span><span class="muted small">tap a cause if dead</span></div>
+            <div class="seg c3 dead" id="deadSeg"></div>
+          </div>
+          <div class="panel">
+            <div class="mhead"><span class="lbl">Missing</span><span class="muted small">long-press − to clear</span></div>
+            <div class="miss"><span class="nm">Claws<small>max 2</small></span><button class="btn" data-miss="claws" data-d="-1" aria-label="Fewer claws missing">−</button><output id="clawsVal">0</output><button class="btn" data-miss="claws" data-d="1" aria-label="More claws missing">+</button></div>
+            <div class="miss"><span class="nm">Legs<small>max 8</small></span><button class="btn" data-miss="legs" data-d="-1" aria-label="Fewer legs missing">−</button><output id="legsVal">0</output><button class="btn" data-miss="legs" data-d="1" aria-label="More legs missing">+</button></div>
+          </div>
+        </div>
+        <div class="tools">
+          <button class="btn tool" id="posBtn"><b>Mark position</b><small id="posSub">GPS for this pot</small></button>
+          <button class="btn tool" id="tagNewBtn"><b>New tag</b><small id="tagNewSub">tag this crab</small></button>
+          <button class="btn tool" id="tagRecBtn"><b>Tag recapture</b><small id="tagRecSub">tagged crab</small></button>
+          <button class="btn tool" id="byBtn"><b>Bycatch &amp; pot</b><small id="bySub">additional info</small></button>
+          <button class="btn tool" id="envBtn"><b>Environment</b><small id="envSub">site water quality</small></button>
+          <button class="btn tool" id="editLastBtn"><b>Edit last animal</b><small>incl. genetic ID</small></button>
+          <button class="btn tool" id="listBtn"><b>Full list</b><small>all records</small></button>
+          <button class="btn tool spare" disabled><b>Spare</b><small>for later</small></button>
+        </div>
+        <div class="panel running" id="running">
+          <div class="runhead" id="runHead"></div>
+          <div class="chips" id="chips"></div>
+        </div>
+        <div class="panel editbar" id="editBar" hidden></div>
+      </div>
+    </section>
+    <section class="page" id="v-other" hidden></section>
+  </main>
+</div>
+<div class="sheet" id="sheet" hidden></div>
+<div class="modal" id="modal" hidden></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+const APP_VERSION='v2';
+const LS_KEY='crabApp.v1';
+const DB_NAME='crabApp';
+const $=s=>document.querySelector(s);
+const $$=(s,el)=>[...(el||document).querySelectorAll(s)];
+const esc=v=>String(v==null?'':v).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+const z=n=>String(n).padStart(2,'0');
+const todayStr=()=>{const d=new Date();return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}`};
+const hmNow=()=>{const d=new Date();return z(d.getHours())+':'+z(d.getMinutes())};
+const hmOf=iso=>{const d=new Date(iso);return isNaN(d)?'':z(d.getHours())+':'+z(d.getMinutes())};
+const xlTime=iso=>{if(!iso)return '';const d=new Date(iso);return isNaN(d)?'':`${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())} ${z(d.getHours())}:${z(d.getMinutes())}:${z(d.getSeconds())}`};
+const fmtDate=s=>{if(!s)return 'No date';const p=s.split('-');return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:s};
+const hasPos=p=>!!p&&p.lat!==''&&p.lat!=null&&isFinite(p.lat)&&p.lon!==''&&p.lon!=null&&isFinite(p.lon);
+
+/* ---------- lists (edit sites, vessels and staff in Setup) ---------- */
+const SITES_DEFAULT=['Garden Island 1','Garden Island 2','Garden Island 3','Basin 1','Basin 2','Basin 3','Mangles Bay 1','Mangles Bay 2','Mangles Bay 3','James Point 1','James Point 2','James Point 3','Jervoise Bay 1','Jervoise Bay 2','Jervoise Bay 3'];
+const SURVEY_TYPES=['Breeding Stock'];
+const RESEARCH_TYPES=['Fishery independent','Commercial'];
+const BIOREGIONS=['West Coast'];
+const REGIONS=['Cockburn Sound'];
+const GEAR_TYPES=['Crab trap'];
+const POT_TYPES=['Research Hourglass Pot (2" mesh, no escape gap)'];
+const WIND=['','N','S','E','W','NE','SW','NW','SE'];
+const BAITS=['Yelloweye mullet','Sea mullet','Fish frames'];
+const CAUSES=['Octopus','BSC fighting','Elasmobranch','Fish','Unknown'];
+const MAIN_SP={c:'Blue Swimmer Crab',s:'Portunus armatus'};
+/* [button label, text saved in the data] */
+const REMARKS=[['Evidence of octopus','Evidence of octopus in pot'],['Fish predation','Evidence of fish predation'],['Elasmobranch predation','Evidence of elasmobranch predation'],
+  ['Small hole (1–2 squares)','Small hole in mesh (1-2 squares)'],['Large hole (3+ squares)','Large hole in mesh (>3 squares)'],['Drawstring broken','Drawstring broken'],
+  ['Bait tube missing','Bait tube missing'],['Tampered (damaged)','Pot tampered (damaged)'],['Tampered (moved / pulled)','Pot tampered (repositioned/pulled)']];
+const BY_QUICK=[['Octopus sp.',''],['Fiddler Ray','Trygonorrhina dumerilii'],['Shovelnose Ray','Aptychotrema vincentiana'],['Gummy Shark','Mustelus antarcticus'],
+  ['Weeping Toadfish','Torquigener pleurogramma'],['Western Butterfish','Pentapodus vitta'],['Coral Crab','Charybdis feriata'],['Two-spot Sand Crab','Ovalipes australiensis'],
+  ['Ridged Swimming Crab','Charybdis natator'],['Four-lobed Swimming Crab','Thalamita sima'],['Hermit crab sp.',''],['Starfish sp.','']].map(([c,s])=>({c,s}));
+/* Starter list for Additional Species. Replace with the full DPIRD list (with CAAB codes) in version 2. */
+const BY_EXTRA=[['Australian Herring','Arripis georgianus'],['Tailor','Pomatomus saltatrix'],['King George Whiting','Sillaginodes punctatus'],['Yellowfin Whiting','Sillago schomburgkii'],
+  ['Southern School Whiting','Sillago bassensis'],['Silver Trevally','Pseudocaranx georgianus'],['Pink Snapper','Chrysophrys auratus'],['Tarwhine','Rhabdosargus sarba'],
+  ['Black Bream','Acanthopagrus butcheri'],['Yelloweye Mullet','Aldrichetta forsteri'],['Sea Mullet','Mugil cephalus'],['Prickly Toadfish','Contusus brevicaudus'],
+  ['Southern Eagle Ray','Myliobatis tenuicaudatus'],['Smooth Stingray','Bathytoshia brevicaudata'],['Sparsely-spotted Stingaree','Urolophus paucimaculatus'],
+  ['Port Jackson Shark','Heterodontus portusjacksoni'],['Western Wobbegong','Orectolobus hutchinsi'],['Whiskery Shark','Furgaleus macki'],['Dusky Whaler','Carcharhinus obscurus'],
+  ['Western Rock Lobster','Panulirus cygnus'],['Western King Prawn','Penaeus latisulcatus'],['Southern Calamari','Sepioteuthis australis'],['Giant Cuttlefish','Sepia apama'],
+  ['Sixspine Leatherjacket','Meuschenia freycineti'],['Leatherjacket sp.',''],['Southern Bluespotted Flathead','Platycephalus speculator'],['Flathead sp.',''],
+  ['Estuary Cobbler','Cnidoglanis macrocephalus'],['Old Wife','Enoplosus armatus'],['Western Striped Grunter','Pelates octolineatus'],['Yellowtail Grunter','Amniataba caudavittata'],
+  ['Silverbelly','Parequula melbournensis'],['Spider crab sp.',''],['Decorator crab sp.',''],['Sea urchin sp.',''],['Sea cucumber sp.',''],['Sponge sp.',''],
+  ['Unidentified fish',''],['Unidentified crab',''],['Unidentified invertebrate','']].map(([c,s])=>({c,s}));
+const KEYS=['7','8','9','4','5','6','1','2','3','.','0','⌫'];
+
+/* Header fields, in form order. Keys also drive the CSV columns. */
+const HCOL={date:'date',vessel:'vessel',skipper:'skipper',recorder:'recorder',survey:'survey_type',research:'research_type',bioregion:'bioregion',region:'region',line:'line',
+  gear:'gear_type',potType:'default_pot_type',bait:'bait',soak:'soak_duration_h',startLat:'start_lat',startLon:'start_lon',startTime:'start_time',endLat:'end_lat',endLon:'end_lon',endTime:'end_time',
+  depthMin:'depth_min_m',depthMax:'depth_max_m',swell:'swell_m',seas:'seas_m',windSpd:'wind_speed_kn',windDir:'wind_direction',
+  tempTop:'temp_top_c',tempBot:'temp_bottom_c',salTop:'salinity_top_ppt',salBot:'salinity_bottom_ppt',doTop:'do_top_ppm',doBot:'do_bottom_ppm',comment:'header_comment'};
+const HKEYS=Object.keys(HCOL);
+const ENV=[['depth','Depth (m)'],['temp','Temperature (°C)'],['sal','Salinity (ppt)'],['do','Dissolved oxygen (ppm)']];
+const ECOL={depthTop:'site_depth_top_m',depthBot:'site_depth_bottom_m',tempTop:'site_temp_top_c',tempBot:'site_temp_bottom_c',salTop:'site_salinity_top_ppt',salBot:'site_salinity_bottom_ppt',doTop:'site_do_top_ppm',doBot:'site_do_bottom_ppm'};
+const EKEYS=Object.keys(ECOL);
+
+/* ---------- state ---------- */
+let S=null,view='entry',fix=null,gpsState='waiting',listSite='',exScope='active',exKind='flat';
+const other=$('#v-other');
+
+function newHeader(prev){
+  const h={};HKEYS.forEach(k=>h[k]='');
+  Object.assign(h,{date:todayStr(),survey:SURVEY_TYPES[0],research:RESEARCH_TYPES[0],bioregion:BIOREGIONS[0],region:REGIONS[0],gear:GEAR_TYPES[0],potType:POT_TYPES[0],soak:'24'});
+  if(prev)['vessel','skipper','recorder','survey','research','bioregion','region','gear','potType','bait','soak'].forEach(k=>h[k]=prev.h[k]);
+  return {id:uid(),h,created:new Date().toISOString(),saved:false,seq:0,repSeq:0,pots:{},sites:{}};
+}
+function blankCur(){return {siteIdx:0,pot:1,len:'',sx:'',egg:'',moult:'',cause:'',claws:0,legs:0,tag:null,gid:'',cmt:'',editId:null,emptyArm:false,ack:'',warn:''}}
+function fresh(){
+  const H=newHeader();
+  return {device:'IPAD-'+Math.random().toString(36).slice(2,5).toUpperCase(),headers:[H],active:H.id,crabs:[],bycatch:[],cur:blankCur(),
+    def:{sx:'M',egg:'',moult:'H',cause:''},defOn:false,lists:{sites:SITES_DEFAULT.slice(),vessels:[],staff:[]},
+    cfg:{maxPots:4,minCW:30,maxCW:230},ui:{theme:'dark',hand:'right'},lastLt:'TL',backup:null};
+}
+function fillDefaults(st){const f=fresh();
+  ['cur','def','lists','cfg','ui','device'].forEach(k=>{if(st[k]==null)st[k]=f[k]});
+  if(!Array.isArray(st.headers)||!st.headers.length){st.headers=f.headers;st.active=f.active}
+  st.headers.forEach(H=>{H.pots=H.pots||{};H.sites=H.sites||{};H.seq=H.seq||0;H.repSeq=H.repSeq||0;HKEYS.forEach(k=>{if(H.h[k]==null)H.h[k]=''})});
+  if(!st.headers.find(h=>h.id===st.active))st.active=st.headers[st.headers.length-1].id;
+  st.crabs=st.crabs||[];st.bycatch=st.bycatch||[];
+  ['sites','vessels','staff'].forEach(k=>{if(!Array.isArray(st.lists[k]))st.lists[k]=f.lists[k]});
+  Object.keys(f.cfg).forEach(k=>{if(st.cfg[k]==null)st.cfg[k]=f.cfg[k]});
+  st.cur=Object.assign(blankCur(),st.cur,{editId:null,emptyArm:false,ack:'',warn:''});
+  return st}
+const act=()=>S.headers.find(h=>h.id===S.active)||S.headers[0];
+function siteName(){const L=S.lists.sites;if(!L.length)return 'Site 1';S.cur.siteIdx=Math.min(Math.max(0,S.cur.siteIdx|0),L.length-1);return L[S.cur.siteIdx]}
+const potKey=(s,p)=>s+'|'+p;
+const potObj=(H,s,p)=>H.pots[potKey(s,p)]||null;
+function touchPot(H,s,p){const k=potKey(s,p);
+  if(!H.pots[k])H.pots[k]={site:s,pot:p,rep:++H.repSeq,potType:H.h.potType,remarks:[],remark:'',lat:'',lon:'',acc:'',posT:'',posSrc:'',empty:false,created:new Date().toISOString()};
+  return H.pots[k]}
+const crabsIn=(H,s,p)=>S.crabs.filter(r=>r.header===H.id&&r.site===s&&r.pot===p);
+const byIn=(H,s,p)=>S.bycatch.filter(r=>r.header===H.id&&r.site===s&&r.pot===p);
+
+/* ---------- storage: two independent copies on the iPad (as Catch Logger) ----------
+   1. IndexedDB (main): one row per record, only changed rows are written.
+   2. localStorage (second copy): the whole state, while it fits.
+   A save only counts as failed if BOTH copies fail. Entry is never blocked. */
+let db=null,dbOk=null,lsOk=true,writing=Promise.resolve(),pend=false;const savedJson=new Map();
+function openDB(){return new Promise(res=>{try{const rq=indexedDB.open(DB_NAME,1);
+  rq.onupgradeneeded=()=>{const d=rq.result;if(!d.objectStoreNames.contains('meta'))d.createObjectStore('meta');if(!d.objectStoreNames.contains('records'))d.createObjectStore('records',{keyPath:'id'})};
+  rq.onsuccess=()=>res(rq.result);rq.onerror=()=>res(null);rq.onblocked=()=>res(null)}catch(e){res(null)}})}
+function idbLoad(){return new Promise(res=>{try{const tx=db.transaction(['meta','records'],'readonly');let meta=null,recs=[];
+  tx.objectStore('meta').get('state').onsuccess=e=>{meta=e.target.result||null};tx.objectStore('records').getAll().onsuccess=e=>{recs=e.target.result||[]};
+  tx.oncomplete=()=>res(meta?Object.assign({},meta,{crabs:recs.filter(r=>r.kind==='crab'),bycatch:recs.filter(r=>r.kind==='by')}):null);tx.onerror=tx.onabort=()=>res(null)}catch(e){res(null)}})}
+function idbWrite(){return new Promise(res=>{try{const meta=Object.assign({},S);delete meta.crabs;delete meta.bycatch;
+  const tx=db.transaction(['meta','records'],'readwrite'),rs=tx.objectStore('records'),seen=new Set(),changed=[];
+  S.crabs.concat(S.bycatch).forEach(r=>{seen.add(r.id);const j=JSON.stringify(r);if(savedJson.get(r.id)!==j){rs.put(JSON.parse(j));changed.push([r.id,j])}});
+  const gone=[...savedJson.keys()].filter(id=>!seen.has(id));gone.forEach(id=>rs.delete(id));
+  tx.objectStore('meta').put(JSON.parse(JSON.stringify(meta)),'state');
+  tx.oncomplete=()=>{changed.forEach(([i,j])=>savedJson.set(i,j));gone.forEach(i=>savedJson.delete(i));res(true)};
+  tx.onerror=tx.onabort=()=>res(false)}catch(e){res(false)}})}
+function load(){try{const t=localStorage.getItem(LS_KEY);if(t)return JSON.parse(t)}catch(e){}return null}
+function save(){S.savedAt=new Date().toISOString();
+  lsOk=true;try{localStorage.setItem(LS_KEY,JSON.stringify(S))}catch(e){lsOk=false}
+  if(db){if(!pend){pend=true;writing=writing.then(()=>{pend=false;return idbWrite()}).then(ok=>{dbOk=ok;saveStatus()})}}else dbOk=false;
+  saveStatus()}
+function saveStatus(){
+  const okNow=lsOk||dbOk===true||(dbOk===null&&!!db),p=$('#savePill');
+  p.textContent=okNow?'Saved':'NOT SAVING';p.className='pill '+(okNow?'ok':'bad');
+  $('#saveFail').hidden=okNow;renderBk()}
+
+/* ---------- backups ---------- */
+const allRecs=()=>S.crabs.concat(S.bycatch);
+function bkLevel(){const bk=S.backup&&S.backup.at?new Date(S.backup.at):null,R=allRecs();
+  const since=R.filter(r=>!bk||new Date(r.ts)>bk).length,mins=bk?(Date.now()-bk)/60000:Infinity;
+  if(!R.length)return {lvl:'ok',txt:'No data yet'};
+  if(!bk)return {lvl:'red',txt:`Not backed up · ${since}`};
+  const lvl=since===0?'ok':(since>=1000||mins>=240)?'red':(since>=300||mins>=120)?'amb':'ok';
+  return {lvl,txt:`Backup ${hmOf(S.backup.at)}${since?` · ${since} since`:' · up to date'}`}}
+function renderBk(){const b=$('#bkPill');if(!b||!S)return;const {lvl,txt}=bkLevel();b.textContent=txt;b.className='uibtn bk '+lvl}
+setInterval(()=>{try{renderBk()}catch(e){}},60000);
+function stampName(){const d=new Date();return `${d.getFullYear()}${z(d.getMonth()+1)}${z(d.getDate())}-${z(d.getHours())}${z(d.getMinutes())}`}
+async function fullBackup(){
+  const name=`crabapp_backup_${S.device}_${stampName()}.json`;
+  const body=JSON.stringify({app:'crab-app',format:1,appVersion:APP_VERSION,exportedAt:new Date().toISOString(),device:S.device,
+    counts:{headers:S.headers.length,crabs:S.crabs.length,bycatch:S.bycatch.length},state:S});
+  const ok=await shareFiles([new File([body],name,{type:'application/json'})],name,`Backup saved (${S.crabs.length} crabs, ${S.bycatch.length} bycatch rows)`);
+  if(ok){S.backup={at:new Date().toISOString()};save()}return ok}
+/* iOS only shares straight after a tap; if preparing took too long, show a "Ready to save" button. */
+async function shareFiles(files,title,okMsg){
+  try{if(navigator.canShare&&navigator.canShare({files})){await navigator.share({files,title});toast(okMsg);return true}}
+  catch(e){if(e&&e.name==='AbortError'){toast('Cancelled. Data is still on this iPad');return false}
+    if(e&&e.name==='NotAllowedError'){return readyToShare(files,title,okMsg)}}
+  if(window.top!==window.self){toast('Files save from the installed app, not this preview');return false}
+  files.forEach((f,i)=>setTimeout(()=>{const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=f.name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},800)},i*600));
+  toast(okMsg);return true}
+function readyToShare(files,title,okMsg){return new Promise(res=>{
+  openModal(`<h3>Ready to save</h3><p class="note">${files.length} file(s) prepared.</p><div class="actions"><button class="btn primary" id="mGo">Save or share now</button><button class="btn" id="mNo">Cancel</button></div>`);
+  $('#mGo').onclick=async()=>{closeModal();try{await navigator.share({files,title});toast(okMsg);res(true)}catch(e){toast('Not saved. Data is still on this iPad');res(false)}};
+  $('#mNo').onclick=()=>{closeModal();res(false)}})}
+
+/* ---------- toast / GPS ---------- */
+let toastT;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),1900)}
+function startGPS(){
+  if(!('geolocation' in navigator)){gpsState='none';renderGPS();return}
+  try{navigator.geolocation.watchPosition(p=>{fix={lat:+p.coords.latitude.toFixed(6),lon:+p.coords.longitude.toFixed(6),acc:Math.round(p.coords.accuracy),t:Date.now()};gpsState='fix';renderGPS()},
+    e=>{gpsState=e&&e.code===1?'blocked':'nofix';renderGPS()},{enableHighAccuracy:true,maximumAge:5000,timeout:20000})}
+  catch(e){gpsState='none';renderGPS()}}
+const liveFix=()=>fix&&Date.now()-fix.t<120000?fix:null;
+function renderGPS(){const p=$('#gpsPill');const f=liveFix();
+  if(f){p.textContent=`GPS ±${f.acc} m`;p.className='pill ok'}
+  else{p.textContent=gpsState==='blocked'?'GPS blocked':gpsState==='none'?'No GPS':'GPS no fix';p.className='pill bad'}}
+setInterval(renderGPS,15000);
+function getFix(cb){const f=liveFix();if(f){cb(f);return}
+  if(!('geolocation' in navigator)){toast('No GPS on this device. Type the position instead');return}
+  toast('Getting GPS position…');
+  navigator.geolocation.getCurrentPosition(p=>{fix={lat:+p.coords.latitude.toFixed(6),lon:+p.coords.longitude.toFixed(6),acc:Math.round(p.coords.accuracy),t:Date.now()};gpsState='fix';renderGPS();cb(fix)},
+    ()=>toast('No GPS fix. Type the position instead'),{enableHighAccuracy:true,timeout:15000,maximumAge:10000})}
+/* decimal degrees, or "deg min" / "deg min sec" with optional N/S/E/W */
+function parseCoord(v,isLat){v=String(v||'').trim();if(!v)return '';
+  let neg=/^-/.test(v)||/[SsWw]\s*$/.test(v);const n=v.replace(/[^\d.\s]/g,' ').trim().split(/\s+/).map(Number);
+  if(!n.length||n.some(x=>!isFinite(x)))return null;let d=n[0]+(n[1]||0)/60+(n[2]||0)/3600;if(neg)d=-d;
+  const lim=isLat?90:180;if(Math.abs(d)>lim)return null;return +d.toFixed(6)}
+
+/* ---------- modal helpers ---------- */
+function openModal(html,wide){const m=$('#modal');m.innerHTML=`<div class="mbox${wide?' wide':''}" role="dialog" aria-modal="true">${html}</div>`;m.hidden=false;return m.firstElementChild}
+function closeModal(){const m=$('#modal');m.hidden=true;m.innerHTML=''}
+$('#modal').addEventListener('pointerdown',e=>{if(e.target.id==='modal')closeModal()});
+function confirmModal(title,text,yes,fn){openModal(`<h3>${esc(title)}</h3><p class="note">${esc(text)}</p><div class="actions"><button class="btn primary" id="cfYes">${esc(yes)}</button><button class="btn" id="cfNo">Cancel</button></div>`);
+  $('#cfYes').onclick=()=>{closeModal();fn()};$('#cfNo').onclick=closeModal}
+/* Delete pattern: Delete turns into Cancel in the same spot, a confirmation line opens below,
+   and "Yes, delete" ignores taps for the first 0.7 s (double-tap protection on a moving boat). */
+function delFlow(btn,host,question,onYes){
+  if(btn._close){btn._close();return}
+  const old=btn.innerHTML;btn.innerHTML='Cancel';btn.classList.add('cancel');btn.classList.remove('danger');
+  const row=document.createElement('div');row.className='confirmbar';row.innerHTML=`<span class="delq">${esc(question)}</span><button class="btn danger solid">Yes, delete</button>`;
+  host.appendChild(row);const t0=Date.now();
+  const close=()=>{row.remove();btn.innerHTML=old;btn.classList.remove('cancel');btn.classList.add('danger');btn._close=null};
+  btn._close=close;
+  row.querySelector('button').onclick=()=>{if(Date.now()-t0<700)return;close();onYes()}}
+function armed(btn,label,fn){
+  if(btn.dataset.armed==='1'){btn.dataset.armed='';btn.classList.remove('armed');fn();return}
+  const old=btn.textContent;btn.dataset.armed='1';btn.classList.add('armed');btn.textContent=label;
+  setTimeout(()=>{if(btn.dataset.armed==='1'){btn.dataset.armed='';btn.classList.remove('armed');btn.textContent=old}},3000)}
+
+/* ---------- crab codes ---------- */
+const sexOf=sx=>sx==='M'?'M':(sx==='FM'||sx==='FI')?'F':sx==='U'?'U':'';
+const matOf=sx=>sx==='FM'?'Mature':sx==='FI'?'Immature':'';
+const SEXW={M:'Male',F:'Female',U:'Unknown sex'};
+function code(sex,size,mat,egg){let s=(sex||'?')+size;if(sex==='F')s+=mat==='Mature'?'M':mat==='Immature'?'I':'';if(egg)s+='S'+egg;return s}
+function chipTxt(r){return code(r.sex,r.sizeUnk?'?':String(r.cw===''?'—':r.cw),r.mat,r.egg)+(r.moult?' '+r.moult[0]:'')+(r.mort==='Dead'?' †':'')+(r.tagStatus?' T':'')}
+function curWords(c){const w=[];const sx=sexOf(c.sx);
+  w.push(sx?SEXW[sx]+(matOf(c.sx)?' '+matOf(c.sx).toLowerCase():''):'No sex');
+  if(c.egg)w.push('eggs stage '+c.egg);
+  if(c.moult)w.push(c.moult==='H'?'Hard':'Soft');
+  w.push(c.cause?'Dead ('+c.cause+')':'Alive');
+  if(c.claws)w.push(c.claws+' claw'+(c.claws>1?'s':'')+' missing');
+  if(c.legs)w.push(c.legs+' leg'+(c.legs>1?'s':'')+' missing');
+  if(c.tag)w.push((c.tag.st==='New'?'New tag ':'Recapture ')+c.tag.no);
+  return w.join(' · ')}
+
+/* ---------- top bar ---------- */
+function renderTop(){const H=act(),h=H.h;
+  $('#stnTitle').textContent=`${fmtDate(h.date)} · ${h.region||'No region'}${h.line?' · Line '+h.line:''}`;
+  $('#stnSub').textContent=[h.survey,h.vessel,`${S.crabs.filter(r=>r.header===H.id).length} crabs today`].filter(Boolean).join(' · ')}
+function applyUi(){const t=S.ui.theme||'dark',hd=S.ui.hand||'right';
+  document.documentElement.setAttribute('data-theme',t);
+  const m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content',t==='dark'?'#121e26':'#f8fafb');
+  $('#v-entry').classList.toggle('lefty',hd==='left');
+  $('#themeBtn').textContent=t==='dark'?'Light':'Dark';$('#handBtn').textContent=hd==='left'?'Right-handed':'Left-handed'}
+$('#themeBtn').onclick=()=>{S.ui.theme=(S.ui.theme||'dark')==='dark'?'light':'dark';applyUi();save()};
+$('#handBtn').onclick=()=>{S.ui.hand=S.ui.hand==='left'?'right':'left';applyUi();save();toast(S.ui.hand==='left'?'Left-handed layout: keypad on the right':'Right-handed layout: keypad on the left')};
+
+/* ---------- data entry ---------- */
+$('#keypad').innerHTML=KEYS.map(k=>`<button class="btn" data-k="${k}"${k==='⌫'?' aria-label="Delete last digit"':''}>${k}</button>`).join('');
+$('#deadSeg').innerHTML=CAUSES.map(c=>`<button class="btn" data-cause="${esc(c)}">† ${esc(c)}</button>`).join('');
+function touch(){S.cur.ack='';S.cur.warn=''}
+function key(k){const c=S.cur;c.emptyArm=false;if(c.len==='UNK')c.len='';
+  if(k==='⌫')c.len=c.len.slice(0,-1);
+  else if(k==='.'){if(!c.len.includes('.'))c.len=(c.len||'0')+'.'}
+  else{const [i,d]=c.len.split('.');if(d!==undefined){if(d.length<1)c.len+=k}else if(i.length<4)c.len=(c.len==='0'?'':c.len)+k}
+  touch();renderEntry()}
+function applyDef(){const c=S.cur,d=S.def;c.sx=d.sx||'';c.egg=d.egg||'';c.moult=d.moult||'';c.cause=d.cause||'';if(c.egg)c.sx='FM'}
+function resetCrab(){const c=S.cur;Object.assign(c,{len:'',sx:'',egg:'',moult:'',cause:'',claws:0,legs:0,tag:null,gid:'',cmt:'',editId:null,emptyArm:false,ack:'',warn:''});if(S.defOn)applyDef()}
+
+function renderEntry(){
+  const c=S.cur,H=act(),s=siteName(),p=c.pot,po=potObj(H,s,p),n=S.lists.sites.length||1;
+  $('#siteName').textContent=s;$('#siteSub').textContent=`Site ${S.cur.siteIdx+1} of ${n}`;
+  $('#potName').textContent='Pot '+p;$('#potSub').textContent=`Pot ${p} of ${S.cfg.maxPots}${po?' · Replicate '+po.rep:' · next replicate '+(H.repSeq+1)}`;
+  const eB=$('#emptyBtn');eB.setAttribute('aria-pressed',String(!!c.emptyArm));eB.innerHTML=c.emptyArm?'Empty<br>pot ✓':(po&&po.empty)?'Marked<br>empty':'Empty<br>pot';
+  // display
+  const unk=c.len==='UNK',has=c.len!==''||unk||c.emptyArm;
+  $('#lenVal').textContent=unk?'?':(c.len||'—');$('#disp').classList.toggle('has',has);
+  $('#codeVal').textContent=c.emptyArm?'EMPTY POT':code(sexOf(c.sx),unk?'?':(c.len||'—'),matOf(c.sx),c.egg)+(c.moult?' '+c.moult:'')+(c.cause?' †':'');
+  $('#codeTxt').textContent=c.emptyArm?(po&&po.empty?`Tap Enter to unmark pot ${p} as empty`:`Tap Enter to record pot ${p} as empty`):curWords(c);
+  if(c.emptyArm)$('#lenVal').textContent='—';
+  $('#unkBtn').setAttribute('aria-pressed',String(unk));
+  const eb=$('#enterBtn');eb.className='btn enter'+(c.editId?' edit':c.ack?' confirm':'');
+  eb.innerHTML=c.editId?'Save<br>changes':c.ack?'Tap again<br>to save':'Enter';
+  const wb=$('#warnBox');wb.hidden=!c.warn;wb.textContent=c.warn;
+  // selections
+  $$('#sexSeg .btn').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.sx===c.sx)));
+  $$('#eggSeg .btn').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.egg===c.egg)));
+  $$('#moultSeg .btn').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mo===c.moult)));
+  $$('#deadSeg .btn').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.cause===c.cause)));
+  const mp=$('#mortPill');mp.textContent=c.cause?'Dead · '+c.cause:'Alive';mp.className='mpill'+(c.cause?' dead':'');
+  const db_=$('#defBtn');db_.setAttribute('aria-pressed',String(!!S.defOn));db_.textContent=(S.defOn?'Default on · ':'Default off · ')+defWords(S.def);
+  $('#clawsVal').textContent=c.claws;$('#clawsVal').className=c.claws?'on':'';$('#legsVal').textContent=c.legs;$('#legsVal').className=c.legs?'on':'';
+  // tools
+  $('#posBtn').classList.toggle('on',hasPos(po));$('#posSub').textContent=hasPos(po)?`${(+po.lat).toFixed(4)}, ${(+po.lon).toFixed(4)}`:'GPS for this pot';
+  const tn=c.tag&&c.tag.st==='New',tr=c.tag&&c.tag.st==='Recapture';
+  $('#tagNewBtn').classList.toggle('on',!!tn);$('#tagNewSub').textContent=tn?'Tag '+c.tag.no:'tag this crab';
+  $('#tagRecBtn').classList.toggle('on',!!tr);$('#tagRecSub').textContent=tr?'Tag '+c.tag.no:'tagged crab';
+  const nb=byIn(H,s,p).length,nr=po?po.remarks.length:0;$('#bySub').textContent=nb||nr?`${nb} bycatch · ${nr} remarks`:'additional info';
+  const env=H.sites[s]&&H.sites[s].env,ne=env?EKEYS.filter(k=>env[k]!=='' && env[k]!=null).length:0;$('#envBtn').classList.toggle('on',ne>0);$('#envSub').textContent=ne?`${ne} of 8 values`:'site water quality';
+  renderRunning();renderEditBar();renderTop()}
+function defWords(d){const w=[];const sx=d.egg?'FM':d.sx;w.push(sx==='M'?'Male':sx==='FM'?'Female mature':sx==='FI'?'Female immature':sx==='U'?'Unknown sex':'');
+  if(d.egg)w.push('Stage '+d.egg);if(d.moult)w.push(d.moult==='H'?'Hard':'Soft');w.push(d.cause?'Dead ('+d.cause+')':'Alive');return w.filter(Boolean).join(' + ')}
+function renderRunning(){const H=act(),s=siteName(),p=S.cur.pot,po=potObj(H,s,p);
+  const rs=crabsIn(H,s,p).slice().reverse(),nb=byIn(H,s,p).length,ps=hasPos(po);
+  $('#runHead').innerHTML=`<span class="lbl">Running list · pot ${p}</span><span class="sp">${rs.length} crab${rs.length===1?'':'s'}${nb?` · ${nb} bycatch row${nb===1?'':'s'}`:''}${po&&po.empty?' · marked empty':''}</span><button class="poschip${ps?'':' missing'}" id="posChip">${ps?`Position ${(+po.lat).toFixed(5)}, ${(+po.lon).toFixed(5)}`:'Position not marked'}</button>`;
+  $('#chips').innerHTML=rs.length?rs.map((r,i)=>`<button class="chip${r.mort==='Dead'?' dead':''}${r.id===S.cur.editId?' sel':''}${i===0&&r.id===lastId?' flash':''}" data-cr="${r.id}">${esc(chipTxt(r))}</button>`).join(''):'<span class="muted">No crabs in this pot yet. Tap a chip to edit a crab.</span>';
+  $('#posChip').onclick=openPos}
+let lastId=null;
+function renderEditBar(){const c=S.cur,eb=$('#editBar');
+  if(!c.editId){eb.hidden=true;eb.innerHTML='';$('#running').hidden=false;return}
+  const r=S.crabs.find(x=>x.id===c.editId);if(!r){resetCrab();eb.hidden=true;return}
+  $('#running').hidden=true;
+  if(eb.dataset.id===r.id&&!eb.hidden)return;
+  eb.dataset.id=r.id;eb.hidden=false;
+  eb.innerHTML=`<div class="runhead"><span class="lbl">Editing crab #${r.seq}</span><span class="sp">${esc(r.site)} · pot ${r.pot} · ${hmOf(r.ts)} · was ${esc(chipTxt(r))}</span></div>
+   <div class="editgrid"><div class="field"><label for="eGid">Genetic ID</label><input id="eGid" class="mono" autocomplete="off" value="${esc(c.gid)}"></div>
+   <div class="field"><label for="eCmt">Comment</label><input id="eCmt" autocomplete="off" value="${esc(c.cmt)}"></div></div>
+   <div class="actions"><button class="btn" id="eCancel">Cancel edit</button><button class="btn danger" id="eDel">Delete crab</button></div>`;
+  $('#eGid').oninput=e=>{c.gid=e.target.value.trim()};$('#eCmt').oninput=e=>{c.cmt=e.target.value};
+  $('#eCancel').onclick=()=>{resetCrab();eb.dataset.id='';renderEntry()};
+  $('#eDel').onclick=e=>delFlow(e.currentTarget,eb,`Delete crab #${r.seq}?`,()=>{S.crabs=S.crabs.filter(x=>x.id!==r.id);resetCrab();eb.dataset.id='';save();renderEntry();toast(`Crab #${r.seq} deleted`)})}
+
+function startEdit(id){const r=S.crabs.find(x=>x.id===id);if(!r)return;const c=S.cur;
+  if(r.header!==S.active){S.active=r.header}
+  const si=S.lists.sites.indexOf(r.site);if(si>=0)c.siteIdx=si;c.pot=r.pot;
+  Object.assign(c,{editId:id,len:r.sizeUnk?'UNK':String(r.cw),sx:r.sex==='M'?'M':r.sex==='U'?'U':r.sex==='F'?(r.mat==='Immature'?'FI':'FM'):'',egg:r.egg||'',
+    moult:r.moult==='Hard'?'H':r.moult==='Soft'?'S':'',cause:r.cause||'',claws:r.claws||0,legs:r.legs||0,tag:r.tagStatus?{st:r.tagStatus,no:r.tagNo,note:r.tagNote}:null,gid:r.gid||'',cmt:r.cmt||'',ack:'',warn:''});
+  $('#editBar').dataset.id='';show('entry')}
+
+function commit(){
+  const c=S.cur,H=act(),w=[],unk=c.len==='UNK';let cw='';
+  if(c.emptyArm){const s=siteName(),p=c.pot,n=crabsIn(H,s,p).length;
+    if(n){c.emptyArm=false;renderEntry();toast(`Pot ${p} already has ${n} crab${n>1?'s':''}`);return}
+    const po=touchPot(H,s,p);po.empty=!po.empty;po.emptyT=new Date().toISOString();resetCrab();save();renderEntry();
+    toast(po.empty?`Pot ${p} recorded as empty`:`Pot ${p} no longer marked empty`);return}
+  if(!unk){if(c.len===''||c.len==='.'||c.len==='0.')w.push('No size entered.');
+    else{cw=parseFloat(c.len);if(!isFinite(cw)||cw<=0){toast('Size is not a number');return}
+      if(cw<S.cfg.minCW||cw>S.cfg.maxCW)w.push(`${cw} mm is outside ${S.cfg.minCW}–${S.cfg.maxCW} mm.`)}}
+  if(!c.sx)w.push('No sex chosen.');
+  if(w.length){const k=w.join(' ')+'|'+c.len+'|'+c.sx;if(c.ack!==k){c.ack=k;c.warn=w.join(' ')+' Check it, then tap Enter again to save.';renderEntry();return}}
+  const f={cw:unk?'':cw,sizeUnk:unk,sex:sexOf(c.sx),mat:matOf(c.sx),egg:c.egg,moult:c.moult==='H'?'Hard':c.moult==='S'?'Soft':'',mort:c.cause?'Dead':'Alive',cause:c.cause,
+    claws:c.claws,legs:c.legs,tagStatus:c.tag?c.tag.st:'',tagNo:c.tag?c.tag.no:'',tagNote:c.tag?c.tag.note:''};
+  if(c.editId){const r=S.crabs.find(x=>x.id===c.editId);
+    if(r){Object.assign(r,f,{gid:c.gid,cmt:c.cmt,edited:new Date().toISOString()});toast(`Crab #${r.seq} updated: ${chipTxt(r)}`)}
+    $('#editBar').dataset.id='';resetCrab();save();renderEntry();return}
+  const s=siteName(),po=touchPot(H,s,c.pot);let note='';
+  if(po.empty){po.empty=false;note=' · pot no longer marked empty'}
+  const r=Object.assign({id:uid(),kind:'crab',header:H.id,device:S.device,seq:++H.seq,ts:new Date().toISOString(),site:s,pot:c.pot,rep:po.rep,species:MAIN_SP.c,sci:MAIN_SP.s,qty:1,gid:'',cmt:'',edited:''},f);
+  S.crabs.push(r);lastId=r.id;resetCrab();save();renderEntry();toast(`Saved ${chipTxt(r)}${note}`)}
+
+function afterNav(){if(S.cur.editId){resetCrab();$('#editBar').dataset.id=''}S.cur.ack='';S.cur.warn='';save();renderEntry()}
+/* Moving site or pot with something typed but not entered asks first. */
+function isDirty(){const c=S.cur;return c.len!==''||!!c.tag||c.claws>0||c.legs>0||!!c.emptyArm||!!c.editId}
+function guardMove(go){if(!isDirty()){go();return}const c=S.cur;
+  const what=c.emptyArm?'Empty pot is selected but not entered':c.editId?'You are editing a crab and have not saved the changes':`A crab is typed but not entered (${$('#codeVal').textContent})`;
+  openModal(`<h3>Not entered yet</h3><p class="note">${esc(what)}. Moving now clears it.</p>
+   <div class="actions"><button class="btn primary" id="gEnter">${c.editId?'Save changes':'Enter it'}, then move</button><button class="btn danger" id="gDrop">Clear it and move</button><button class="btn" id="gStay">Stay here</button></div>`);
+  $('#gEnter').onclick=()=>{closeModal();commit();if(isDirty()){toast('Check the warning, then tap Enter');return}go()};
+  $('#gDrop').onclick=()=>{closeModal();resetCrab();$('#editBar').dataset.id='';go()};
+  $('#gStay').onclick=closeModal}
+$('#siteUp').onclick=()=>guardMove(()=>{const n=S.lists.sites.length||1;S.cur.siteIdx=(S.cur.siteIdx+1)%n;S.cur.pot=1;afterNav()});
+$('#siteDn').onclick=()=>guardMove(()=>{const n=S.lists.sites.length||1;S.cur.siteIdx=(S.cur.siteIdx-1+n)%n;S.cur.pot=1;afterNav()});
+$('#potDn').onclick=()=>{if(S.cur.pot>1)guardMove(()=>{S.cur.pot--;afterNav()})};
+$('#potUp').onclick=()=>guardMove(()=>{const c=S.cur;
+  if(c.pot>=S.cfg.maxPots)confirmModal(`${siteName()} already has ${c.pot} pots`,`Sites normally have ${S.cfg.maxPots} pots. Only go to pot ${c.pot+1} if there really is an extra pot at this site.`,`Go to pot ${c.pot+1}`,()=>{c.pot++;afterNav()});
+  else{c.pot++;afterNav()}});
+$('#keypad').onclick=e=>{const b=e.target.closest('[data-k]');if(b)key(b.dataset.k)};
+$('#unkBtn').onclick=()=>{S.cur.emptyArm=false;S.cur.len=S.cur.len==='UNK'?'':'UNK';touch();renderEntry()};
+$('#clearBtn').onclick=()=>{const keep=S.cur.editId;if(keep){S.cur.len='';touch()}else resetCrab();renderEntry()};
+$('#enterBtn').onclick=commit;
+$('#sexSeg').onclick=e=>{const b=e.target.closest('[data-sx]');if(!b)return;const c=S.cur,v=b.dataset.sx;c.sx=c.sx===v?'':v;if(c.sx!=='FM')c.egg='';touch();renderEntry()};
+$('#eggSeg').onclick=e=>{const b=e.target.closest('[data-egg]');if(!b)return;const c=S.cur,v=b.dataset.egg;if(c.egg===v)c.egg='';else{c.egg=v;c.sx='FM'}touch();renderEntry()};
+$('#moultSeg').onclick=e=>{const b=e.target.closest('[data-mo]');if(!b)return;const c=S.cur;c.moult=c.moult===b.dataset.mo?'':b.dataset.mo;touch();renderEntry()};
+$('#deadSeg').onclick=e=>{const b=e.target.closest('[data-cause]');if(!b)return;const c=S.cur;c.cause=c.cause===b.dataset.cause?'':b.dataset.cause;touch();renderEntry()};
+const MAXMISS={claws:2,legs:8};
+$$('[data-miss]').forEach(b=>{let t=null,held=false;
+  b.addEventListener('pointerdown',()=>{held=false;if(b.dataset.d==='-1')t=setTimeout(()=>{held=true;S.cur[b.dataset.miss]=0;renderEntry();toast(b.dataset.miss==='claws'?'Claws cleared':'Legs cleared')},600)});
+  ['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,()=>clearTimeout(t)));
+  b.addEventListener('click',()=>{if(held){held=false;return}const k=b.dataset.miss,v=S.cur[k]+ +b.dataset.d;
+    if(v>MAXMISS[k]){toast(`No more than ${MAXMISS[k]} ${k} can be missing`);return}S.cur[k]=Math.max(0,v);renderEntry()})});
+$('#defBtn').onclick=()=>{S.defOn=!S.defOn;if(S.defOn&&!S.cur.editId)applyDef();touch();save();renderEntry();toast(S.defOn?'Default on: '+defWords(S.def):'Default off')};
+$('#setDefBtn').onclick=openDef;
+$('#emptyBtn').onclick=()=>{const c=S.cur,H=act(),s=siteName(),p=c.pot,n=crabsIn(H,s,p).length;
+  if(c.emptyArm){c.emptyArm=false;touch();renderEntry();return}
+  if(c.editId){toast('Save or cancel the edit first');return}
+  if(n){toast(`Pot ${p} already has ${n} crab${n>1?'s':''}`);return}
+  resetCrab();c.emptyArm=true;touch();renderEntry()};
+$('#posBtn').onclick=()=>{const f=liveFix();if(!f){openPos();return}
+  const H=act(),po=touchPot(H,siteName(),S.cur.pot);Object.assign(po,{lat:f.lat,lon:f.lon,acc:f.acc,posT:new Date().toISOString(),posSrc:'GPS'});
+  save();renderEntry();toast(`Pot ${S.cur.pot} position marked (±${f.acc} m). Tap the position to change it`)};
+$('#tagNewBtn').onclick=()=>openTag('New');
+$('#tagRecBtn').onclick=()=>openTag('Recapture');
+$('#byBtn').onclick=openBy;
+$('#envBtn').onclick=openEnv;
+$('#editLastBtn').onclick=()=>{const H=act();const rs=S.crabs.filter(r=>r.header===H.id);if(!rs.length){toast('No crabs entered yet');return}
+  startEdit(rs.reduce((a,b)=>(b.seq>a.seq?b:a)).id)};
+$('#listBtn').onclick=()=>show('list');
+$('#chips').onclick=e=>{const b=e.target.closest('[data-cr]');if(b)startEdit(b.dataset.cr)};
+
+/* ---------- position ---------- */
+function openPos(){const H=act(),s=siteName(),p=S.cur.pot,po=potObj(H,s,p)||{};const f=liveFix();
+  openModal(`<h3>Position · ${esc(s)}, pot ${p}</h3>
+   <p class="note">${f?`GPS fix ±${f.acc} m.`:'No GPS fix right now. Try “Use GPS now”, or type the position.'} Decimal degrees (−32.1934) or degrees and minutes (32 11.604 S) both work.</p>
+   <div class="actions"><button class="btn go" id="pmGo">Use GPS now</button></div>
+   <div class="form"><div class="field"><label for="pmLat">Latitude</label><input id="pmLat" class="mono" inputmode="decimal" autocomplete="off" value="${hasPos(po)?po.lat:''}"></div>
+   <div class="field"><label for="pmLon">Longitude</label><input id="pmLon" class="mono" inputmode="decimal" autocomplete="off" value="${hasPos(po)?po.lon:''}"></div></div>
+   <div class="actions"><button class="btn primary" id="pmSave">Save position</button><button class="btn" id="pmClose">Close</button>${hasPos(po)?'<button class="btn danger" id="pmClr">Clear position</button>':''}</div>`);
+  let src='Manual',acc='';
+  $('#pmGo').onclick=()=>getFix(g=>{$('#pmLat').value=g.lat;$('#pmLon').value=g.lon;src='GPS';acc=g.acc;toast(`GPS ±${g.acc} m. Tap Save position`)});
+  ['pmLat','pmLon'].forEach(i=>$('#'+i).oninput=()=>{src='Manual';acc=''});
+  $('#pmClose').onclick=closeModal;
+  if($('#pmClr'))$('#pmClr').onclick=e=>armed(e.target,'Tap again to clear',()=>{const q=touchPot(H,s,p);Object.assign(q,{lat:'',lon:'',acc:'',posT:'',posSrc:''});save();closeModal();renderEntry()});
+  $('#pmSave').onclick=()=>{const la=parseCoord($('#pmLat').value,true),lo=parseCoord($('#pmLon').value,false);
+    if(la===null||lo===null||la===''||lo===''){toast('Check the latitude and longitude');return}
+    if(la>0){toast('Latitude should be negative south of the equator (e.g. −32.19)');return}
+    const q=touchPot(H,s,p);Object.assign(q,{lat:la,lon:lo,acc:src==='GPS'?acc:'',posT:new Date().toISOString(),posSrc:src});save();closeModal();renderEntry();toast(`Pot ${p} position saved`)}}
+
+/* ---------- tags ---------- */
+function openTag(st){const c=S.cur;let mode=c.tag?c.tag.st:st;const t=c.tag||{no:'',note:''};
+  openModal(`<h3>Tag</h3><p class="note">Saved on the crab you are entering when you tap Enter${c.editId?' (Save changes)':''}.</p>
+   <div class="seg c2" id="tgSeg"><button class="btn" data-v="New">New tag</button><button class="btn" data-v="Recapture">Recapture</button></div>
+   <div class="field"><label for="tgNo">Tag number</label><input id="tgNo" class="mono big" autocomplete="off" value="${esc(t.no)}"></div>
+   <div class="field"><label for="tgNote">Note</label><input id="tgNote" autocomplete="off" value="${esc(t.note)}" placeholder="Tag colour, position, anything else"></div>
+   <div class="actions"><button class="btn primary" id="tgSave">Save tag</button><button class="btn" id="tgCancel">Cancel</button>${c.tag?'<button class="btn danger" id="tgDel">Remove tag</button>':''}</div>`);
+  const seg=()=>$$('#tgSeg .btn').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===mode)));seg();
+  $('#tgSeg').onclick=e=>{const b=e.target.closest('[data-v]');if(b){mode=b.dataset.v;seg()}};
+  $('#tgCancel').onclick=closeModal;
+  if($('#tgDel'))$('#tgDel').onclick=()=>{c.tag=null;closeModal();renderEntry();toast('Tag removed')};
+  $('#tgSave').onclick=()=>{const no=$('#tgNo').value.trim();if(!no){toast('Enter the tag number');return}
+    c.tag={st:mode,no,note:$('#tgNote').value.trim()};closeModal();renderEntry();toast(`${mode==='New'?'New tag':'Recapture'} ${no} will be saved with this crab`)};
+  setTimeout(()=>{const el=$('#tgNo');if(el)el.focus()},50)}
+
+/* ---------- default ---------- */
+function openDef(){const d=Object.assign({sx:'',egg:'',moult:'',cause:''},S.def);
+  const opts=(name,list,cur)=>list.map(([v,l])=>`<button class="btn" data-g="${name}" data-v="${esc(v)}" aria-pressed="${v===cur}">${esc(l)}</button>`).join('');
+  const draw=()=>{const b=$('.mbox');b.innerHTML=`<h3>Set default</h3><p class="note">The default fills these in for every new crab, so a typical crab is just size + Enter. Change any button on the entry screen for the odd crab.</p>
+    <span class="lbl">Sex and maturity</span><div class="seg c5">${opts('sx',[['','None'],['M','Male'],['FM','Female mature'],['FI','Female immature'],['U','Unknown']],d.egg?'FM':d.sx)}</div>
+    <span class="lbl">Egg stage</span><div class="seg c4">${opts('egg',[['','None'],['1','Stage 1'],['2','Stage 2'],['3','Stage 3']],d.egg)}</div>
+    <span class="lbl">Moult</span><div class="seg c3">${opts('moult',[['','None'],['H','Hard'],['S','Soft']],d.moult)}</div>
+    <span class="lbl">Mortality</span><div class="seg c3">${opts('cause',[['','Alive'],...CAUSES.map(c=>[c,'Dead · '+c])],d.cause)}</div>
+    <p class="note"><b>Default:</b> ${esc(defWords(d))}</p>
+    <div class="actions"><button class="btn primary" id="dfSave">Save and turn default on</button><button class="btn" id="dfCancel">Cancel</button></div>`;
+    b.onclick=e=>{const x=e.target.closest('[data-g]');if(!x)return;const g=x.dataset.g,v=x.dataset.v;d[g]=v;if(g==='egg'&&v)d.sx='FM';if(g==='sx'&&v!=='FM')d.egg='';draw()};
+    $('#dfCancel').onclick=closeModal;
+    $('#dfSave').onclick=()=>{S.def=d;S.defOn=true;if(!S.cur.editId)applyDef();touch();save();closeModal();renderEntry();toast('Default saved: '+defWords(d))}};
+  openModal('',true);draw()}
+
+/* ---------- environment (per site) ---------- */
+function openEnv(){const H=act(),s=siteName();const e=(H.sites[s]&&H.sites[s].env)||{};
+  openModal(`<h3>Environment · ${esc(s)}</h3><p class="note">Applies to the whole site.</p>
+   <div class="envgrid"><span></span><span class="gh">Top</span><span class="gh">Bottom</span>
+   ${ENV.map(([k,l])=>`<span class="rh">${l}</span><input data-e="${k}Top" inputmode="decimal" aria-label="${l} top" value="${esc(e[k+'Top'])}" autocomplete="off"><input data-e="${k}Bot" inputmode="decimal" aria-label="${l} bottom" value="${esc(e[k+'Bot'])}" autocomplete="off">`).join('')}</div>
+   <div class="actions"><button class="btn primary" id="enSave">Save</button><button class="btn" id="enCancel">Cancel</button></div>`,true);
+  $('#enCancel').onclick=closeModal;
+  $('#enSave').onclick=()=>{const env={};$$('[data-e]',$('#modal')).forEach(i=>env[i.dataset.e]=i.value.trim());
+    const bad=Object.entries(env).filter(([k,v])=>v!==''&&!isFinite(+v));if(bad.length){toast('Numbers only, please');return}
+    H.sites[s]={env,t:new Date().toISOString()};save();closeModal();renderEntry();toast(`Environment saved for ${s}`)}}
+
+/* ---------- bycatch and pot info ---------- */
+let bc={sp:null,len:'',lt:'',sex:'',qty:1};
+const BYSEX={M:'Male',F:'Female',B:'Berried'};
+function byTxt(r){return `${r.species}${r.len!==''?' '+r.len:''}${r.sex?' '+BYSEX[r.sex]:''}${r.len!==''?' '+r.lt:''}${(r.qty>1||r.len==='')?' ×'+r.qty:''}`}
+function openBy(){bc={sp:null,len:'',lt:'',sex:'',qty:1};$('#sheet').hidden=false;document.body.classList.add('noscroll');renderBy();$('#sheet').scrollTop=0}
+function closeBy(){$('#sheet').hidden=true;$('#sheet').innerHTML='';document.body.classList.remove('noscroll');renderEntry()}
+function renderBy(){const H=act(),s=siteName(),p=S.cur.pot,po=potObj(H,s,p),rows=byIn(H,s,p);
+  const isQuick=bc.sp&&BY_QUICK.some(x=>x.c===bc.sp.c);
+  const pts=POT_TYPES.slice();const ptCur=po?po.potType:H.h.potType;if(ptCur&&!pts.includes(ptCur))pts.push(ptCur);
+  $('#sheet').innerHTML=`<div class="sheetin">
+   <div class="shead"><div><h2>Bycatch &amp; pot info</h2><span class="muted">${esc(s)} · Pot ${p}${po?' · Replicate '+po.rep:''}</span></div><button class="btn go done" id="byDone">Done</button></div>
+   <span class="lbl">Species</span>
+   <div class="bygrid">${BY_QUICK.map((x,i)=>`<button class="btn bysp" data-q="${i}" aria-pressed="${!!(bc.sp&&bc.sp.c===x.c)}"><span class="n">${esc(x.c)}</span>${x.s?`<span class="s">${esc(x.s)}</span>`:''}</button>`).join('')}</div>
+   <button class="btn addsp" id="addSp" aria-pressed="${!!(bc.sp&&!isQuick)}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>${bc.sp&&!isQuick?esc(bc.sp.c):'Additional Species'} <small>${bc.sp&&!isQuick?'tap to change':'search the full species list'}</small></button>
+   <div class="panel byentry">
+     <div class="bypad"><div class="bydisp"><span>${esc(bc.len||'—')}</span><small>mm</small></div><div class="keypad bykeys">${KEYS.map(k=>`<button class="btn" data-bk="${k}"${k==='⌫'?' aria-label="Delete last digit"':''}>${k}</button>`).join('')}</div></div>
+     <div class="byright">
+       <div class="bysel">${bc.sp?`Selected: <b>${esc(bc.sp.c)}</b>`:'<span class="muted">Pick a species</span>'} <span class="muted small">· size and sex optional</span></div>
+       <span class="lbl">Length type</span><div class="seg c3">${['TL','FL','CW'].map(v=>`<button class="btn" data-lt="${v}" aria-pressed="${bc.lt===v}">${v}</button>`).join('')}</div>
+       <span class="lbl">Sex</span><div class="seg c3">${Object.entries(BYSEX).map(([v,l])=>`<button class="btn" data-bs="${v}" aria-pressed="${bc.sex===v}">${l}</button>`).join('')}</div>
+       <div class="cntrow"><span class="lbl">Count</span><button class="btn step" id="qDn" aria-label="Decrease count">−</button><output>${bc.qty}</output><button class="btn step" id="qUp" aria-label="Increase count">+</button><button class="btn enter" id="byEnter">Enter</button></div>
+     </div>
+   </div>
+   <div class="panel byrun"><span class="lbl">Bycatch · pot ${p}</span><div class="byline">${rows.length?rows.map(r=>`<button class="chip" data-br="${r.id}">${esc(byTxt(r))}</button>`).join(''):'<span class="muted">Nothing entered for this pot yet</span>'}</div></div>
+   <div class="runhead"><span class="lbl">Pot remarks</span><span class="muted small">${po?po.remarks.length:0} of 5 chosen</span></div>
+   <div class="remgrid">${REMARKS.map(([sh,full],i)=>`<button class="btn rem" data-rm="${i}" aria-pressed="${!!(po&&po.remarks.includes(full))}">${esc(sh)}</button>`).join('')}</div>
+   <div class="form2"><div class="field"><label for="byPt">Pot type <span>from header unless changed</span></label><select id="byPt">${pts.map(v=>`<option${v===ptCur?' selected':''}>${esc(v)}</option>`).join('')}</select></div>
+   <div class="field"><label for="byRm">Remarks</label><input id="byRm" autocomplete="off" value="${esc(po?po.remark:'')}" placeholder="Free-text note for this pot"></div></div>
+  </div>`;
+  const sh=$('#sheet');
+  $('#byDone').onclick=()=>{const v=$('#byRm').value;const q=potObj(H,s,p);if(q?q.remark!==v:v){touchPot(H,s,p).remark=v;save()}closeBy()};
+  sh.querySelector('.bygrid').onclick=e=>{const b=e.target.closest('[data-q]');if(!b)return;const x=BY_QUICK[+b.dataset.q];bc.sp=bc.sp&&bc.sp.c===x.c?null:x;renderBy()};
+  $('#addSp').onclick=openSpSearch;
+  sh.querySelector('.bykeys').onclick=e=>{const b=e.target.closest('[data-bk]');if(!b)return;const k=b.dataset.bk;
+    if(k==='⌫')bc.len=bc.len.slice(0,-1);else if(k==='.'){if(!bc.len.includes('.'))bc.len=(bc.len||'0')+'.'}else{const [i,d]=bc.len.split('.');if(d!==undefined){if(d.length<1)bc.len+=k}else if(i.length<4)bc.len=(bc.len==='0'?'':bc.len)+k}
+    renderBy()};
+  $$('[data-lt]',sh).forEach(b=>b.onclick=()=>{bc.lt=bc.lt===b.dataset.lt?'':b.dataset.lt;renderBy()});
+  $$('[data-bs]',sh).forEach(b=>b.onclick=()=>{bc.sex=bc.sex===b.dataset.bs?'':b.dataset.bs;renderBy()});
+  $('#qDn').onclick=()=>{bc.qty=Math.max(1,bc.qty-1);renderBy()};
+  $('#qUp').onclick=()=>{bc.qty=Math.min(999,bc.qty+1);renderBy()};
+  $('#byEnter').onclick=()=>{if(!bc.sp){toast('Pick a species first');return}
+    let len='';if(bc.len!==''){len=parseFloat(bc.len);if(!isFinite(len)||len<=0){toast('Size is not a number');return}if(!bc.lt){toast('Pick the length type: TL, FL or CW');return}}
+    const q=touchPot(H,s,p);
+    const r={id:uid(),kind:'by',header:H.id,device:S.device,seq:++H.seq,ts:new Date().toISOString(),site:s,pot:p,rep:q.rep,species:bc.sp.c,sci:bc.sp.s||'',len,lt:len!==''?bc.lt:'',sex:bc.sex,qty:bc.qty,cmt:''};
+    S.bycatch.push(r);bc.len='';bc.lt='';bc.sex='';bc.qty=1;save();renderBy();toast('Saved '+byTxt(r))};
+  sh.querySelector('.byline').onclick=e=>{const b=e.target.closest('[data-br]');if(b)openByRec(b.dataset.br,renderBy)};
+  sh.querySelector('.remgrid').onclick=e=>{const b=e.target.closest('[data-rm]');if(!b)return;const full=REMARKS[+b.dataset.rm][1],q=touchPot(H,s,p);
+    if(q.remarks.includes(full))q.remarks=q.remarks.filter(x=>x!==full);else{if(q.remarks.length>=5){toast('Up to 5 remarks per pot');return}q.remarks.push(full)}save();renderBy()};
+  $('#byPt').onchange=e=>{touchPot(H,s,p).potType=e.target.value;save();toast('Pot type saved for this pot')};
+  $('#byRm').onchange=e=>{touchPot(H,s,p).remark=e.target.value;save()}}
+function openByRec(id,after){const r=S.bycatch.find(x=>x.id===id);if(!r)return;
+  const box=openModal(`<h3>${esc(byTxt(r))}</h3><p class="note">${esc(r.site)} · pot ${r.pot} · replicate ${r.rep} · ${hmOf(r.ts)}${r.sci?' · <i>'+esc(r.sci)+'</i>':''}</p>
+    <p class="note">To change it, delete it and enter it again.</p><div class="actions"><button class="btn" id="brClose">Close</button><button class="btn danger" id="brDel">Delete</button></div>`);
+  $('#brClose').onclick=closeModal;
+  $('#brDel').onclick=e=>delFlow(e.currentTarget,box,'Delete this bycatch row?',()=>{S.bycatch=S.bycatch.filter(x=>x.id!==id);save();closeModal();toast('Bycatch row deleted');after&&after()})}
+function openSpSearch(){
+  openModal(`<h3>Additional Species</h3><input id="spQ" class="tin" placeholder="Search common or scientific name" autocomplete="off" aria-label="Search species"><div class="splist" id="spList"></div>
+   <div class="actions"><button class="btn" id="spClose">Close</button></div>`,true);
+  const draw=()=>{const q=$('#spQ').value.trim().toLowerCase();
+    const list=BY_EXTRA.concat(BY_QUICK).filter(x=>!q||x.c.toLowerCase().includes(q)||x.s.toLowerCase().includes(q));
+    const exact=list.some(x=>x.c.toLowerCase()===q);
+    $('#spList').innerHTML=list.map(x=>`<button class="btn" data-sp="${esc(x.c)}"><b>${esc(x.c)}</b>${x.s?`<i>${esc(x.s)}</i>`:''}</button>`).join('')+
+      (q&&!exact?`<button class="btn" data-new="1"><b>Use “${esc($('#spQ').value.trim())}” as typed</b><i>not in the list</i></button>`:'')};
+  draw();$('#spQ').oninput=draw;$('#spClose').onclick=closeModal;
+  $('#spList').onclick=e=>{const b=e.target.closest('button');if(!b)return;
+    if(b.dataset.new){bc.sp={c:$('#spQ').value.trim(),s:''}}else{bc.sp=BY_EXTRA.concat(BY_QUICK).find(x=>x.c===b.dataset.sp)}closeModal();renderBy()};
+  setTimeout(()=>{const el=$('#spQ');if(el)el.focus()},50)}
+
+/* ---------- views ---------- */
+function show(v){view=v;$$('#nav button').forEach(b=>b.setAttribute('aria-current',b.dataset.v===v?'page':'false'));
+  $('#v-entry').hidden=v!=='entry';other.hidden=v==='entry';
+  if(v==='entry')renderEntry();else({days:viewDays,header:viewHeader,list:viewList,export:viewExport,setup:viewSetup})[v]();
+  renderTop();$('#main').scrollTop=0}
+$('#nav').onclick=e=>{const b=e.target.closest('[data-v]');if(b)show(b.dataset.v)};
+
+function viewDays(){const hs=S.headers.slice().sort((a,b)=>(b.h.date||'').localeCompare(a.h.date||'')||(b.created||'').localeCompare(a.created||''));
+  other.innerHTML=`<h2>Days</h2><p class="note">One header per day or per region. For commercial monitoring, make one per line. The active one is outlined; data entry always goes into it.</p>
+   <div class="actions"><button class="btn primary" id="dNew">New header</button></div>
+   ${hs.map(H=>{const nc=S.crabs.filter(r=>r.header===H.id).length,nb=S.bycatch.filter(r=>r.header===H.id).length,np=Object.keys(H.pots).length;
+     return `<div class="panel daycard${H.id===S.active?' on':''}" data-h="${H.id}"><div><h3>${esc(fmtDate(H.h.date))} · ${esc(H.h.region||'No region')}${H.h.line?' · Line '+esc(H.h.line):''}</h3>
+      <span class="muted">${esc([H.h.survey,H.h.research,H.h.vessel].filter(Boolean).join(' · '))} · ${nc} crabs · ${nb} bycatch rows · ${np} pots</span></div>
+      <div class="actions">${H.id===S.active?'<span class="stat">Active</span>':`<button class="btn" data-open="${H.id}">Make active</button>`}<button class="btn" data-edit="${H.id}">Header</button><button class="btn go" data-go="${H.id}">Data entry</button><button class="btn danger" data-del="${H.id}">Delete</button></div></div>`}).join('')}`;
+  $('#dNew').onclick=()=>{const H=newHeader(act());S.headers.push(H);S.active=H.id;S.cur.siteIdx=0;S.cur.pot=1;resetCrab();save();show('header')};
+  other.onclick=e=>{const b=e.target.closest('button');if(!b)return;
+    if(b.dataset.open){S.active=b.dataset.open;S.cur.siteIdx=0;S.cur.pot=1;resetCrab();save();viewDays();renderTop();toast('Header made active')}
+    else if(b.dataset.edit){S.active=b.dataset.edit;resetCrab();save();show('header')}
+    else if(b.dataset.go){S.active=b.dataset.go;resetCrab();save();show('entry')}
+    else if(b.dataset.del){const id=b.dataset.del,H=S.headers.find(x=>x.id===id),card=b.closest('.daycard'),nc=S.crabs.filter(r=>r.header===id).length+S.bycatch.filter(r=>r.header===id).length;
+      delFlow(b,card,`Delete this header${nc?` and its ${nc} records`:''}? Make a backup first if you need them.`,()=>{
+        S.crabs=S.crabs.filter(r=>r.header!==id);S.bycatch=S.bycatch.filter(r=>r.header!==id);S.headers=S.headers.filter(x=>x!==H);
+        if(!S.headers.length)S.headers.push(newHeader(H));if(!S.headers.find(x=>x.id===S.active))S.active=S.headers[S.headers.length-1].id;
+        resetCrab();save();viewDays();renderTop();toast('Header deleted')})}}}
+
+function viewHeader(){const H=act(),h=H.h;other.onclick=null;
+  const inp=(k,l,o={})=>`<div class="field${o.wide?' wide':''}"><label for="h_${k}">${l}${o.hint?` <span>${o.hint}</span>`:''}</label><input id="h_${k}" data-k="${k}" value="${esc(h[k])}"${o.type?` type="${o.type}"`:''}${o.num?' inputmode="decimal"':''}${o.list?` list="${o.list}"`:''}${o.ph?` placeholder="${esc(o.ph)}"`:''} autocomplete="off"${o.mono?' class="mono"':''}></div>`;
+  const sel=(k,l,opts,o={})=>{const list=(h[k]===''||opts.includes(h[k]))?opts:[...opts,h[k]];return `<div class="field${o.wide?' wide':''}"><label for="h_${k}">${l}</label><select id="h_${k}" data-k="${k}">${list.map(v=>`<option${v===h[k]?' selected':''}>${esc(v)}</option>`).join('')}</select></div>`};
+  const vessel=S.lists.vessels.length?sel('vessel','Vessel',['',...S.lists.vessels]):inp('vessel','Vessel',{hint:'list in Setup'});
+  const se=(w,lab)=>`<span class="rh">${lab}</span>${['Lat','Lon'].map(x=>`<input class="tin mono" data-k="${w}${x}" aria-label="${lab} ${x==='Lat'?'latitude':'longitude'}" inputmode="decimal" value="${esc(h[w+x])}" placeholder="${x==='Lat'?'−32.1934':'115.7012'}" autocomplete="off">`).join('')}<input class="tin" type="time" data-k="${w}Time" aria-label="${lab} time" value="${esc(h[w+'Time'])}"><button class="btn" data-gps="${w}">Use GPS</button>`;
+  other.innerHTML=`<h2>Day header</h2><p class="note">Applies to every site and pot under it.</p>
+   <div class="panel"><span class="lbl">Trip</span><div class="form">
+     ${inp('date','Date',{type:'date',hint:'today or any date'})}${vessel}
+     ${inp('skipper','Skipper',{list:'dlStaff',hint:'pick or type'})}${inp('recorder','Recorder',{list:'dlStaff',hint:'pick or type'})}
+     ${sel('survey','Survey type',SURVEY_TYPES)}${sel('research','Research type',RESEARCH_TYPES)}</div></div>
+   <div class="panel"><span class="lbl">Location</span><div class="form">${sel('bioregion','Bioregion',BIOREGIONS)}${sel('region','Region',REGIONS)}${inp('line','Line',{hint:'commercial only',ph:'Blank if independent'})}</div></div>
+   <div class="panel"><span class="lbl">Gear</span><div class="form">${sel('gear','Gear type',GEAR_TYPES)}${sel('potType','Default pot type',POT_TYPES)}${inp('bait','Bait',{list:'dlBait',hint:'pick or type'})}${inp('soak','Soak duration (h)',{num:true})}</div></div>
+   <div class="panel"><span class="lbl">Start and end</span><div class="segrid"><span></span><span class="gh">Latitude</span><span class="gh">Longitude</span><span class="gh">Time</span><span></span>${se('start','Start')}${se('end','End')}</div></div>
+   <div class="panel"><span class="lbl">Conditions</span><div class="form">${inp('depthMin','Depth min (m)',{num:true})}${inp('depthMax','Depth max (m)',{num:true})}${inp('swell','Swell (m)',{num:true})}${inp('seas','Seas (m)',{num:true})}${inp('windSpd','Wind speed (kn)',{num:true})}${sel('windDir','Wind direction',WIND)}</div></div>
+   <div class="panel"><span class="lbl">Water quality</span><div class="wqgrid"><span></span><span class="gh">Top</span><span class="gh">Bottom</span>
+     ${[['temp','Temperature (°C)'],['sal','Salinity (ppt)'],['do','Dissolved oxygen (ppm)']].map(([k,l])=>`<span class="rh">${l}</span><input class="tin mono" data-k="${k}Top" inputmode="decimal" aria-label="${l} top" value="${esc(h[k+'Top'])}" autocomplete="off"><input class="tin mono" data-k="${k}Bot" inputmode="decimal" aria-label="${l} bottom" value="${esc(h[k+'Bot'])}" autocomplete="off">`).join('')}</div></div>
+   <div class="panel"><div class="field"><label for="h_comment">Comment</label><textarea id="h_comment" data-k="comment">${esc(h.comment)}</textarea></div></div>
+   <button class="btn go savehdr" id="hSave">Save header and start data entry</button>
+   <datalist id="dlStaff">${S.lists.staff.map(x=>`<option value="${esc(x)}">`).join('')}</datalist>
+   <datalist id="dlBait">${BAITS.map(x=>`<option value="${esc(x)}">`).join('')}</datalist>`;
+  $$('[data-gps]',other).forEach(b=>b.onclick=()=>getFix(f=>{const w=b.dataset.gps;other.querySelector(`[data-k="${w}Lat"]`).value=f.lat;other.querySelector(`[data-k="${w}Lon"]`).value=f.lon;other.querySelector(`[data-k="${w}Time"]`).value=hmNow();toast(`${w==='start'?'Start':'End'} position and time filled (±${f.acc} m)`)}));
+  $('#hSave').onclick=()=>{const v={};$$('[data-k]',other).forEach(el=>v[el.dataset.k]=el.value.trim());
+    if(!v.date){toast('Pick a date');return}
+    for(const w of ['start','end']){['Lat','Lon'].forEach(x=>{if(v[w+x]!==''){const c=parseCoord(v[w+x],x==='Lat');if(c!==null)v[w+x]=String(c)}})}
+    const badN=['soak','depthMin','depthMax','swell','seas','windSpd','tempTop','tempBot','salTop','salBot','doTop','doBot','startLat','startLon','endLat','endLon'].filter(k=>v[k]!==''&&!isFinite(+v[k]));
+    if(badN.length){toast('Check the number fields ('+badN.length+' not a number)');return}
+    Object.assign(h,v);H.saved=true;save();toast('Header saved');show('entry')}}
+
+function viewList(){const H=act();other.onclick=null;
+  const sites=[...new Set(S.crabs.concat(S.bycatch).filter(r=>r.header===H.id).map(r=>r.site))];
+  const cr=S.crabs.filter(r=>r.header===H.id&&(!listSite||r.site===listSite)).slice().reverse();
+  const by=S.bycatch.filter(r=>r.header===H.id&&(!listSite||r.site===listSite)).slice().reverse();
+  const pots=Object.values(H.pots).filter(p=>!listSite||p.site===listSite).sort((a,b)=>a.rep-b.rep);
+  other.innerHTML=`<h2>Full list</h2>
+   <div class="actions"><div class="field"><label for="lsSite">Site</label><select id="lsSite"><option value="">All sites</option>${sites.map(s=>`<option${s===listSite?' selected':''}>${esc(s)}</option>`).join('')}</select></div>
+   <span class="muted">${cr.length} crabs · ${by.length} bycatch rows · ${pots.length} pots. Tap a crab to edit it.</span></div>
+   <div class="panel"><span class="lbl">Crabs</span><div class="tblwrap"><table><thead><tr><th>#</th><th>Time</th><th>Site</th><th>Pot</th><th>Rep</th><th>Code</th><th>CW mm</th><th>Sex</th><th>Maturity</th><th>Eggs</th><th>Moult</th><th>Status</th><th>Cause</th><th>Claws</th><th>Legs</th><th>Tag</th><th>Genetic ID</th><th>Comment</th></tr></thead>
+   <tbody>${cr.map(r=>`<tr class="click" data-cr="${r.id}"><td>${r.seq}</td><td>${hmOf(r.ts)}</td><td>${esc(r.site)}</td><td>${r.pot}</td><td>${r.rep}</td><td class="mono${r.mort==='Dead'?' dead':''}">${esc(chipTxt(r))}</td><td>${r.sizeUnk?'unknown':r.cw}</td><td>${r.sex}</td><td>${r.mat}</td><td>${r.egg}</td><td>${r.moult}</td><td${r.mort==='Dead'?' class="dead"':''}>${r.mort}</td><td>${esc(r.cause)}</td><td>${r.claws||''}</td><td>${r.legs||''}</td><td>${r.tagStatus?esc(r.tagStatus+' '+r.tagNo):''}</td><td class="mono">${esc(r.gid)}</td><td>${esc(r.cmt)}</td></tr>`).join('')||'<tr><td colspan="18" class="muted">No crabs yet</td></tr>'}</tbody></table></div></div>
+   <div class="panel"><span class="lbl">Bycatch · tap a row to delete it</span><div class="tblwrap"><table><thead><tr><th>#</th><th>Time</th><th>Site</th><th>Pot</th><th>Rep</th><th>Species</th><th>Length</th><th>Type</th><th>Sex</th><th>Count</th></tr></thead>
+   <tbody>${by.map(r=>`<tr class="click" data-br="${r.id}"><td>${r.seq}</td><td>${hmOf(r.ts)}</td><td>${esc(r.site)}</td><td>${r.pot}</td><td>${r.rep}</td><td>${esc(r.species)}</td><td>${r.len}</td><td>${r.lt}</td><td>${r.sex?BYSEX[r.sex]:''}</td><td>${r.qty}</td></tr>`).join('')||'<tr><td colspan="10" class="muted">No bycatch yet</td></tr>'}</tbody></table></div></div>
+   <div class="panel"><span class="lbl">Pots</span><div class="tblwrap"><table><thead><tr><th>Rep</th><th>Site</th><th>Pot</th><th>Crabs</th><th>Empty</th><th>Position</th><th>Pot type</th><th>Remarks</th></tr></thead>
+   <tbody>${pots.map(p=>`<tr><td>${p.rep}</td><td>${esc(p.site)}</td><td>${p.pot}</td><td>${crabsIn(H,p.site,p.pot).length}</td><td>${p.empty?'Yes':''}</td><td class="mono">${hasPos(p)?`${(+p.lat).toFixed(5)}, ${(+p.lon).toFixed(5)}`:'<span class="muted">not marked</span>'}</td><td>${esc(p.potType)}</td><td>${esc(p.remarks.concat(p.remark?[p.remark]:[]).join('; '))}</td></tr>`).join('')||'<tr><td colspan="8" class="muted">No pots yet</td></tr>'}</tbody></table></div></div>`;
+  $('#lsSite').onchange=e=>{listSite=e.target.value;viewList()};
+  $$('[data-cr]',other).forEach(t=>t.onclick=()=>startEdit(t.dataset.cr));
+  $$('[data-br]',other).forEach(t=>t.onclick=()=>openByRec(t.dataset.br,viewList))}
+
+/* ---------- export ---------- */
+const q=v=>{v=v==null?'':String(v);return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+const CRAB_COLS=['record_id','header_id','device','record_no','timestamp_utc','time_local','site','pot_no','replicate','species','scientific_name','cw_mm','size_unknown','sex','maturity','egg_stage','moult','mortality_status','mortality_cause','claws_missing','legs_missing','tag_status','tag_number','tag_note','genetic_id','quantity','comment','edited_utc'];
+const crabRow=r=>[r.id,r.header,r.device,r.seq,r.ts,xlTime(r.ts),r.site,r.pot,r.rep,r.species,r.sci,r.cw,r.sizeUnk?'Y':'N',r.sex,r.mat,r.egg,r.moult,r.mort,r.cause,r.claws,r.legs,r.tagStatus,r.tagNo,r.tagNote,r.gid,r.qty,r.cmt,r.edited];
+const POT_COLS=['header_id','device','site','pot_no','replicate','pot_type','empty_pot','pot_lat','pot_lon','position_time_local','position_source','gps_accuracy_m','remark_1','remark_2','remark_3','remark_4','remark_5','pot_comment','crab_count','bycatch_rows'];
+const potRow=(H,p)=>[H.id,S.device,p.site,p.pot,p.rep,p.potType,p.empty?'Y':'N',hasPos(p)?p.lat:'',hasPos(p)?p.lon:'',xlTime(p.posT),p.posSrc,p.acc,...[0,1,2,3,4].map(i=>p.remarks[i]||''),p.remark,crabsIn(H,p.site,p.pot).length,byIn(H,p.site,p.pot).length];
+const hdrRow=H=>[H.id,S.device,...HKEYS.map(k=>H.h[k])];
+const HDR_COLS=['header_id','device',...HKEYS.map(k=>HCOL[k])];
+function csv(kind,scope){
+  const hs=scope==='all'?S.headers:[act()],ids=new Set(hs.map(H=>H.id)),hm=Object.fromEntries(hs.map(H=>[H.id,H]));
+  const cr=S.crabs.filter(r=>ids.has(r.header)).sort((a,b)=>String(a.ts).localeCompare(String(b.ts)));
+  const by=S.bycatch.filter(r=>ids.has(r.header)).sort((a,b)=>String(a.ts).localeCompare(String(b.ts)));
+  let rows;
+  if(kind==='crabs')rows=[CRAB_COLS,...cr.map(crabRow)];
+  else if(kind==='bycatch')rows=[['record_id','header_id','device','record_no','timestamp_utc','time_local','site','pot_no','replicate','species','scientific_name','length_mm','length_type','sex','quantity','comment'],
+    ...by.map(r=>[r.id,r.header,r.device,r.seq,r.ts,xlTime(r.ts),r.site,r.pot,r.rep,r.species,r.sci,r.len,r.lt,r.sex?BYSEX[r.sex]:'',r.qty,r.cmt])];
+  else if(kind==='pots'){rows=[POT_COLS];hs.forEach(H=>Object.values(H.pots).sort((a,b)=>a.rep-b.rep).forEach(p=>rows.push(potRow(H,p))))}
+  else if(kind==='sites'){rows=[['header_id','device','site',...EKEYS.map(k=>ECOL[k])]];hs.forEach(H=>Object.entries(H.sites).forEach(([s,o])=>rows.push([H.id,S.device,s,...EKEYS.map(k=>(o.env||{})[k])])))}
+  else if(kind==='headers')rows=[HDR_COLS,...hs.map(hdrRow)];
+  else{/* flat: one row per crab with header, pot and site details repeated; empty pots get a row too */
+    const pc=POT_COLS.slice(5,18),ec=EKEYS.map(k=>ECOL[k]);
+    rows=[[...HDR_COLS,...CRAB_COLS.slice(3,9),...pc,...ec,...CRAB_COLS.slice(9),'record_id']];
+    const prow=(H,s,p)=>{const o=potObj(H,s,p);return o?potRow(H,o).slice(5,18):pc.map(()=>'')};
+    const erow=(H,s)=>{const e=(H.sites[s]&&H.sites[s].env)||{};return EKEYS.map(k=>e[k])};
+    const all=cr.map(r=>({t:r.ts,row:[...hdrRow(hm[r.header]),...crabRow(r).slice(3,9),...prow(hm[r.header],r.site,r.pot),...erow(hm[r.header],r.site),...crabRow(r).slice(9),r.id]}));
+    hs.forEach(H=>Object.values(H.pots).filter(p=>p.empty&&!crabsIn(H,p.site,p.pot).length).forEach(p=>all.push({t:p.created,row:[...hdrRow(H),'','','',p.site,p.pot,p.rep,...potRow(H,p).slice(5,18),...erow(H,p.site),...CRAB_COLS.slice(9).map(()=>''),'']})));
+    all.sort((a,b)=>String(a.t).localeCompare(String(b.t)));rows.push(...all.map(x=>x.row))}
+  return rows.map(r=>r.map(q).join(',')).join('\n')}
+function fileTag(scope){const H=act();return scope==='all'?'all':`${(H.h.date||'nodate')}_${(H.h.region||'region').replace(/[^A-Za-z0-9]+/g,'')}${H.h.line?'_L'+H.h.line.replace(/[^A-Za-z0-9]+/g,''):''}`}
+const KINDS=[['flat','Flat (one row per crab)'],['crabs','Crabs'],['bycatch','Bycatch'],['pots','Pots'],['sites','Sites (environment)'],['headers','Headers']];
+function viewExport(){other.onclick=null;const top=window.top===window.self;const txt=csv(exKind,exScope);
+  other.innerHTML=`<h2>Export</h2>
+   <div class="tabs">${[['active','This header'],['all','All headers']].map(([k,l])=>`<button class="btn" data-sc="${k}" aria-pressed="${exScope===k}">${l}</button>`).join('')}</div>
+   <div class="panel"><span class="lbl">Email the data</span>
+    <p class="note">Sends six CSV files: <b>flat</b> (one row per crab, with the header, pot and site details repeated; empty pots get a row) plus the linked tables <b>crabs</b>, <b>bycatch</b>, <b>pots</b>, <b>sites</b> and <b>headers</b>, which join on header_id, site and pot_no. Choose Mail in the share sheet, add the address and tap Send.</p>
+    <div class="actions"><button class="btn primary" id="exMail">Email CSV files</button><button class="btn" id="exBk">Full backup file</button></div></div>
+   <div class="panel"><span class="lbl">Preview</span><div class="tabs">${KINDS.map(([k,l])=>`<button class="btn" data-ex="${k}" aria-pressed="${exKind===k}">${l}</button>`).join('')}</div>
+    <textarea class="csv" id="csvOut" readonly aria-label="CSV preview">${esc(txt)}</textarea>
+    <div class="actions"><button class="btn" id="copyCsv">Copy CSV</button></div>
+    ${top?'':'<p class="note">In this preview, use Copy. The installed app emails the files.</p>'}</div>`;
+  $$('[data-sc]',other).forEach(b=>b.onclick=()=>{exScope=b.dataset.sc;viewExport()});
+  $$('[data-ex]',other).forEach(b=>b.onclick=()=>{exKind=b.dataset.ex;viewExport()});
+  $('#copyCsv').onclick=()=>{const ta=$('#csvOut');const p=navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(ta.value):Promise.reject();
+    p.then(()=>toast('CSV copied')).catch(()=>{ta.focus();ta.select();toast('Selected. Use the system Copy')})};
+  $('#exBk').onclick=()=>fullBackup();
+  $('#exMail').onclick=()=>{const tag=fileTag(exScope);
+    const files=KINDS.map(([k])=>new File(['\uFEFF'+csv(k,exScope)],`crabapp_${k}_${tag}_${S.device}.csv`,{type:'text/csv'}));
+    shareFiles(files,`Crab App data ${tag}`,'CSV files ready to send')}}
+
+/* ---------- setup ---------- */
+function viewSetup(){other.onclick=null;
+  other.innerHTML=`<h2>Setup</h2>
+   <div class="panel"><div class="form">
+    <div class="field"><label for="s_dev">Device ID</label><input id="s_dev" value="${esc(S.device)}" autocomplete="off"></div>
+    <div class="field"><label for="s_max">Pots per site (warn above)</label><input id="s_max" inputmode="numeric" value="${S.cfg.maxPots}"></div>
+    <div class="field"><label for="s_min">Warn below CW (mm)</label><input id="s_min" inputmode="decimal" value="${S.cfg.minCW}"></div>
+    <div class="field"><label for="s_maxcw">Warn above CW (mm)</label><input id="s_maxcw" inputmode="decimal" value="${S.cfg.maxCW}"></div>
+   </div></div>
+   <div class="panel"><span class="lbl">Lists · one per line</span><div class="form">
+    <div class="field"><label for="s_sites">Sites, in the order the arrows step through them</label><textarea id="s_sites" rows="10">${esc(S.lists.sites.join('\n'))}</textarea></div>
+    <div class="field"><label for="s_ves">Vessels</label><textarea id="s_ves" rows="10">${esc(S.lists.vessels.join('\n'))}</textarea></div>
+    <div class="field"><label for="s_staff">Staff (skipper and recorder)</label><textarea id="s_staff" rows="10">${esc(S.lists.staff.join('\n'))}</textarea></div>
+   </div></div>
+   <div class="actions"><button class="btn primary" id="sSave">Save setup</button></div>
+   <div class="actions"><span class="note">Crab App version <b>${APP_VERSION}</b></span><button class="btn" id="chkUpd">Check for updates</button></div>
+   <div class="panel"><span class="lbl">Data on this iPad</span><p class="note" id="storeInfo">Checking storage…</p>
+    <div class="actions"><button class="btn primary" id="bkNow3">Full backup now</button><button class="btn danger" id="clrAll">Clear all data</button></div></div>
+   <div class="panel"><span class="lbl">Restore from a backup file</span>
+    <p class="note">Use this to move data to another iPad or recover after a problem. Choose a <b>crabapp_backup_….json</b> file from Files. You see what is in it before anything changes.</p>
+    <input type="file" id="rsFile" accept=".json,application/json" aria-label="Backup file"><div id="rsOut"></div></div>`;
+  storeInfo();
+  const lines=id=>$(id).value.split('\n').map(x=>x.trim()).filter(Boolean);
+  $('#sSave').onclick=()=>{const sites=lines('#s_sites');if(!sites.length){toast('Keep at least one site');return}
+    const cur=siteName();S.device=$('#s_dev').value.trim()||S.device;
+    S.cfg.maxPots=Math.max(1,parseInt($('#s_max').value,10)||4);S.cfg.minCW=+$('#s_min').value||30;S.cfg.maxCW=+$('#s_maxcw').value||230;
+    S.lists.sites=sites;S.lists.vessels=lines('#s_ves');S.lists.staff=lines('#s_staff');
+    const i=sites.indexOf(cur);S.cur.siteIdx=i>=0?i:0;save();renderTop();toast('Setup saved')};
+  $('#chkUpd').onclick=async()=>{if(!window.checkForUpdate){toast('Updates apply to the installed app, not this preview');return}
+    toast('Checking…');const r=await window.checkForUpdate();
+    toast({latest:`You have the latest version (${APP_VERSION})`,downloading:'New version downloading. A restart button will appear',ready:'Update ready. Tap the green button to restart',offline:'No internet. Try again when back in range',none:'Open the app from the home-screen icon to get updates'}[r]||'Checked')};
+  $('#bkNow3').onclick=()=>fullBackup();
+  $('#clrAll').onclick=e=>armed(e.target,'Tap again to erase everything',()=>{const keep={device:S.device,lists:S.lists,cfg:S.cfg,ui:S.ui,def:S.def,defOn:S.defOn};
+    S=Object.assign(fresh(),keep);applyUi();save();viewSetup();renderTop();toast('All data cleared')});
+  $('#rsFile').onchange=e=>{const f=e.target.files&&e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>previewRestore(String(rd.result));rd.onerror=()=>toast('Could not read that file');rd.readAsText(f)}}
+async function storeInfo(){const el=$('#storeInfo');if(!el)return;let used='',pers='unknown';
+  try{if(navigator.storage&&navigator.storage.estimate){const e=await navigator.storage.estimate();used=`${(e.usage/1e6).toFixed(1)} MB used of about ${Math.round(e.quota/1e6)} MB available`}}catch(e){}
+  try{if(navigator.storage&&navigator.storage.persisted)pers=(await navigator.storage.persisted())?'granted':'not granted (iOS may still keep it; back up regularly)'}catch(e){}
+  el.innerHTML=`${S.crabs.length} crabs and ${S.bycatch.length} bycatch rows under ${S.headers.length} header(s). Main store: <b>${db?(dbOk===false?'last save failed':'OK'):'unavailable'}</b> · Second copy: <b>${lsOk?'OK':'full (main store still saving)'}</b> · Permanent storage: ${pers}${used?' · '+used:''}.`}
+function previewRestore(txt){const out=$('#rsOut');let b;
+  try{b=JSON.parse(txt)}catch(e){out.innerHTML='<p class="warn">That file is not a Crab App backup (could not read it).</p>';return}
+  if(!b||b.app!=='crab-app'||!b.state||!Array.isArray(b.state.crabs)||!Array.isArray(b.state.headers)){out.innerHTML='<p class="warn">That file is not a Crab App backup.</p>';return}
+  const B=b.state;B.bycatch=B.bycatch||[];const have=new Set(allRecs().map(r=>r.id)),haveH=new Set(S.headers.map(x=>x.id));
+  const newC=B.crabs.filter(r=>!have.has(r.id)),newB=B.bycatch.filter(r=>!have.has(r.id)),newH=B.headers.filter(x=>!haveH.has(x.id)).length;
+  out.innerHTML=`<p class="note">Backup from <b>${esc(b.device||'?')}</b>, saved ${esc((b.exportedAt||'').replace('T',' ').slice(0,16))} UTC: <b>${B.headers.length}</b> headers, <b>${B.crabs.length}</b> crabs, <b>${B.bycatch.length}</b> bycatch rows. This iPad has ${S.headers.length} headers, ${S.crabs.length} crabs, ${S.bycatch.length} bycatch rows.</p>
+   <div class="actions"><button class="btn primary" id="rsMerge">Add missing (${newH} headers, ${newC.length+newB.length} records)</button><button class="btn danger" id="rsReplace">Replace everything on this iPad</button></div>
+   <p class="note"><b>Add missing</b> keeps everything here and adds what is only in the backup. <b>Replace</b> makes this iPad an exact copy of the backup, including its Device ID. Make a backup of this iPad first if it holds anything you need.</p>`;
+  $('#rsMerge').onclick=()=>{B.headers.forEach(bh=>{const cur=S.headers.find(x=>x.id===bh.id);if(!cur){S.headers.push(bh);return}
+      cur.seq=Math.max(cur.seq||0,bh.seq||0);cur.repSeq=Math.max(cur.repSeq||0,bh.repSeq||0);
+      Object.keys(bh.pots||{}).forEach(k=>{if(!cur.pots[k])cur.pots[k]=bh.pots[k]});Object.keys(bh.sites||{}).forEach(k=>{if(!cur.sites[k])cur.sites[k]=bh.sites[k]})});
+    S.crabs=S.crabs.concat(newC);S.bycatch=S.bycatch.concat(newB);S=fillDefaults(S);save();toast(`Added ${newH} headers and ${newC.length+newB.length} records`);show('days')};
+  $('#rsReplace').onclick=e=>armed(e.target,'Tap again to replace all data',()=>{const ui=S.ui;S=fillDefaults(JSON.parse(JSON.stringify(B)));S.ui=ui||S.ui;applyUi();save();toast(`Restored ${S.crabs.length} crabs`);show('days')})}
+$('#bkPill').onclick=()=>fullBackup();
+$('#bkNow2').onclick=()=>fullBackup();
+
+/* ---------- boot ---------- */
+document.addEventListener('pointerdown',function(){try{navigator.wakeLock&&navigator.wakeLock.request('screen').catch(()=>{})}catch(e){}},{once:true});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){try{navigator.wakeLock&&navigator.wakeLock.request('screen').catch(()=>{})}catch(e){}}});
+(async()=>{
+  try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+  db=await openDB();
+  const a=db?await idbLoad():null,b=load();
+  if(a){a.crabs.concat(a.bycatch).forEach(r=>savedJson.set(r.id,JSON.stringify(r)))}
+  /* newest copy wins; the second copy stops updating once it is full, so the main store is normally newer */
+  const pick=a&&b?((a.savedAt||'')>=(b.savedAt||'')?a:b):(a||b);
+  S=pick?fillDefaults(pick):fresh();
+  ['crabs','bycatch'].forEach(k=>S[k].sort((x,y)=>String(x.ts).localeCompare(String(y.ts))));
+  if(S.defOn&&!S.cur.sx&&!S.cur.len)applyDef();
+  applyUi();save();startGPS();renderGPS();show(act().saved?'entry':'header');
+})();
+})();
+</script>
+<script>
+/* Updates: sw.js re-downloads every file with cache:'reload' and activates at once (skipWaiting).
+   The page then shows "Update downloaded · tap to restart". Data is saved continuously, so a restart loses nothing. */
+(function(){
+  var btn=document.getElementById('updBtn'),reg=null,ready=false;
+  function showReady(){ready=true;btn.hidden=false}
+  btn.onclick=function(){location.reload()};
+  var ok=('serviceWorker' in navigator)&&window.isSecureContext&&window.top===window.self;
+  if(ok){
+    var hadController=!!navigator.serviceWorker.controller;
+    navigator.serviceWorker.register('sw.js').then(function(r){reg=r;
+      if(r.waiting&&hadController)showReady();
+    }).catch(function(){});
+    navigator.serviceWorker.addEventListener('controllerchange',function(){if(hadController)showReady()});
+  }
+  window.checkForUpdate=async function(){
+    if(!reg)return 'none';if(!navigator.onLine)return 'offline';
+    try{await reg.update()}catch(e){return 'offline'}
+    if(ready)return 'ready';if(reg.installing||reg.waiting)return 'downloading';return 'latest'};
+})();
+</script>
+</body>
+</html>
