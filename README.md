@@ -1,4 +1,4 @@
-# Crab App v2
+# Crab App v3
 
 Offline iPad app for Blue Swimmer Crab trap surveys. Built on the Catch Logger plumbing: plain HTML/JS installed to the home screen, no server, all data stays on the iPad until it is exported.
 
@@ -36,6 +36,7 @@ IndexedDB `crabApp`, localStorage `crabApp.v1`, caches `crab-app-vN` and `crab-a
 - Changing site or pot with something typed but not entered asks first: Enter it then move, Clear it and move, or Stay here.
 - Bycatch length type (TL, FL, CW) starts unselected for every row and must be tapped when a length is entered.
 - Header bait: pick Yelloweye mullet, Sea mullet or Fish frames, or type another. Wind direction: N, S, E, W, NE, SW, NW, SE.
+- The data entry screen shrinks evenly to fit the tablet's screen, so nothing needs scrolling (Setup > Data entry screen to switch this off).
 - Every crab is alive with quantity 1 unless a cause of death is tapped.
 - Egg stage 1/2/3 sets female + mature. Claws missing max 2, legs max 8.
 - Warnings (save on the second Enter tap): CW under 30 mm or over 230 mm, no size, no sex. Limits are in Setup.

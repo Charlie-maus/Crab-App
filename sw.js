@@ -1,5 +1,5 @@
 /* Crab App service worker. Bump VERSION (and APP_VERSION in index.html) for every release. */
-const VERSION='v2';
+const VERSION='v3';
 const CACHE='crab-app-'+VERSION;
 const FONTS='crab-app-fonts';
 const FILES=['./','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png','./apple-touch-icon.png'];
