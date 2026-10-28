@@ -191,7 +191,7 @@ main{overflow:auto;padding-inline:16px;padding-block:0 calc(16px + env(safe-area
 .editgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr);gap:10px}
 .flash{animation:flash .4s ease-out}
 @keyframes flash{from{background:var(--go);color:var(--on-go)}to{}}
-@media (max-width:760px){
+@media (max-width:560px){
   .enterrow{grid-template-columns:84px minmax(0,1fr);}
   .enterrow .enter{grid-column:1/-1;min-height:72px}
   .work{grid-template-columns:1fr}
@@ -280,7 +280,8 @@ textarea.csv{width:100%;min-height:260px;font-family:var(--f-mono);font-size:12p
 .splist .btn i{font-size:13px;opacity:.8}
 .envgrid{display:grid;grid-template-columns:minmax(150px,210px) repeat(2,minmax(0,1fr));gap:10px 12px;align-items:center}
 .envgrid input{min-height:56px;font-family:var(--f-mono);font-size:22px;text-align:right;border:1px solid var(--line);border-radius:10px;background:var(--raised);padding:0 12px;width:100%}
-@media (max-width:760px){.byentry{grid-template-columns:1fr}.bygrid,.remgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.segrid{grid-template-columns:52px repeat(3,minmax(0,1fr))}.segrid .btn{grid-column:2/-1}.form2{grid-template-columns:1fr}}
+@media (max-width:760px){.byentry{grid-template-columns:repeat(2,minmax(0,1fr))}.cntrow .enter{font-size:24px}.cntrow .btn.step{width:48px}.cntrow output{width:40px}}
+@media (max-width:560px){.byentry{grid-template-columns:1fr}.bygrid,.remgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.segrid{grid-template-columns:52px repeat(3,minmax(0,1fr))}.segrid .btn{grid-column:2/-1}.form2{grid-template-columns:1fr}}
 
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-weight:600;opacity:0;transition:opacity .15s;pointer-events:none;z-index:40;max-width:calc(100% - 32px)}
 .toast.on{opacity:1}
@@ -394,7 +395,7 @@ textarea.csv{width:100%;min-height:260px;font-family:var(--f-mono);font-size:12p
 <script>
 (function(){
 'use strict';
-const APP_VERSION='v3';
+const APP_VERSION='v4';
 const LS_KEY='crabApp.v1';
 const DB_NAME='crabApp';
 const $=s=>document.querySelector(s);
@@ -669,15 +670,21 @@ function fitEntry(){const e=$('#v-entry'),m=$('#main');if(!e||e.hidden)return;
   if(!S||S.ui.fit===false)return;
   const cs=getComputedStyle(m),padB=parseFloat(cs.paddingBottom)||0,padL=parseFloat(cs.paddingLeft)||0,padR=parseFloat(cs.paddingRight)||0;
   const sf=$('#saveFail'),sfH=sf.hidden?0:sf.offsetHeight+10;
-  const avail=m.clientHeight-padB-sfH-2,need=e.offsetHeight;
-  if(need<=avail||avail<200)return;
-  const z=Math.max(0.62,avail/need),pw=m.clientWidth-padL-padR,cap=e.classList.contains('lefty')?1000:1000;
-  const landscape=matchMedia('(orientation: landscape) and (min-width: 1000px)').matches;
-  const w=landscape?pw/z:Math.min(pw/z,cap);
-  Object.assign(e.style,{transform:`scale(${z})`,transformOrigin:'top left',width:w+'px',maxWidth:'none',marginLeft:Math.max(0,(pw-w*z)/2)+'px',marginRight:'0',marginBottom:(-(e.offsetHeight*(1-z)))+'px'});
-  /* re-measure once at the new width (wider layout can be shorter) */
-  const need2=e.offsetHeight;if(need2*z>avail+1){const z2=Math.max(0.62,avail/need2);if(z2<z){const w2=landscape?pw/z2:Math.min(pw/z2,cap);
-    Object.assign(e.style,{transform:`scale(${z2})`,width:w2+'px',marginLeft:Math.max(0,(pw-w2*z2)/2)+'px',marginBottom:(-(e.offsetHeight*(1-z2)))+'px'})}}}
+  const pw=m.clientWidth-padL-padR,avail=m.clientHeight-padB-sfH-2;
+  if(pw<=0||avail<200)return;
+  if(matchMedia('(max-width: 560px)').matches)return; /* phones: stacked layout, scroll */
+  const land=matchMedia('(orientation: landscape) and (min-width: 1000px)').matches;
+  const phone=matchMedia('(max-width: 560px)').matches;
+  /* Lay the screen out at least iPad width (800 px; 1000 px in landscape), then scale the whole thing
+     down to fit the width and height of this screen. Every tablet gets the same layout. */
+  const lay=w=>{e.style.width=w+'px';e.style.maxWidth='none';return e.offsetHeight};
+  let w=phone?pw:Math.max(pw,land?1000:800);if(!land&&!phone)w=Math.min(w,Math.max(pw,1000));
+  let need=lay(w),z=Math.min(1,pw/w,avail/need);
+  if(z>=0.999&&w<=pw){Object.assign(e.style,{width:'',maxWidth:''});return}
+  z=Math.max(0.4,z);
+  /* height-limited: widen the layout into the spare width, which can make it shorter */
+  if(pw/w>z+0.01){const w2=land?pw/z:Math.min(pw/z,Math.max(w,1000));if(w2>w){w=w2;need=lay(w);z=Math.max(0.4,Math.min(1,pw/w,avail/need))}}
+  Object.assign(e.style,{transform:`scale(${z})`,transformOrigin:'top left',marginLeft:Math.max(0,(pw-w*z)/2)+'px',marginRight:'0',marginBottom:(-(e.offsetHeight*(1-z)))+'px'})}
 let fitT;window.addEventListener('resize',()=>{clearTimeout(fitT);fitT=setTimeout(fitEntry,120)});
 window.addEventListener('orientationchange',()=>setTimeout(fitEntry,300));
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{try{fitEntry()}catch(e){}});
